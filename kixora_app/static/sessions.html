@@ -1,0 +1,62 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Kixora Sessions</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#060611;color:#e2e8f0;font-family:'Inter',sans-serif;min-height:100vh;padding:20px}
+header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;max-width:1000px;margin:0 auto 20px auto}
+h1{font-size:1.5rem;font-weight:900;background:linear-gradient(135deg,#6ee7f7,#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.btn{background:var(--surface);color:var(--text);border:1px solid var(--border);padding:8px 16px;border-radius:8px;text-decoration:none;font-size:.9rem}
+.container{max-width:1000px;margin:0 auto}
+.card{background:#0f0f1f;border:1px solid #1e1e3f;border-radius:12px;padding:20px;margin-bottom:16px;display:flex;flex-direction:column;gap:12px}
+.s-head{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #1e1e3f;padding-bottom:10px}
+.s-title{font-size:1.1rem;font-weight:700}
+.s-time{color:#64748b;font-size:.85rem}
+.s-stats{display:flex;gap:20px;font-size:.9rem}
+.s-stat span{color:#6ee7f7;font-weight:700}
+.s-loc{font-size:.8rem;color:#64748b;font-family:monospace;background:#060611;padding:8px;border-radius:6px}
+</style>
+</head>
+<body>
+<header>
+  <h1>Sessions Archive</h1>
+  <a href="/" class="btn" style="border:1px solid #1e1e3f;color:#e2e8f0">← Back to Dashboard</a>
+</header>
+<div class="container" id="list">Loading...</div>
+<script>
+async function load(){
+  try{
+    const r=await fetch('/sessions');
+    const data=await r.json();
+    const list=document.getElementById('list');
+    list.innerHTML='';
+    if(!data.sessions||data.sessions.length===0){
+      list.innerHTML='<div class="card">No sessions recorded yet. Start a session from the dashboard.</div>';
+      return;
+    }
+    data.sessions.forEach(s=>{
+      const d=new Date(s.timestamp_ms);
+      const c=document.createElement('div');
+      c.className='card';
+      c.innerHTML=`
+        <div class="s-head">
+          <div class="s-title">${s.session_name}</div>
+          <div class="s-time">${d.toLocaleString()}</div>
+        </div>
+        <div class="s-stats">
+          <div class="s-stat">Duration: <span>${(s.duration_sec/60).toFixed(1)} min</span></div>
+          <div class="s-stat">P1: <span>${s.player_names['1']}</span></div>
+          <div class="s-stat">P2: <span>${s.player_names['2']}</span></div>
+        </div>
+        <div class="s-loc">💾 Folder: ${s.session_dir}</div>
+      `;
+      list.appendChild(c);
+    });
+  }catch(e){
+    document.getElementById('list').innerHTML='<div class="card" style="color:#f87171">Error loading sessions</div>';
+  }
+}
+load();
+</script>
+</body></html>

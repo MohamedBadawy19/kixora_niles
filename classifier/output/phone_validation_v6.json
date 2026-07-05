@@ -1,0 +1,61 @@
+{
+  "Front Kick": {
+    "distribution": {
+      "Idle": 137,
+      "Dolyo Chagi": 48,
+      "Ap Chagi": 14
+    },
+    "active_distribution": {
+      "Dolyo Chagi": 48,
+      "Idle": 38,
+      "Ap Chagi": 13
+    },
+    "majority_all": "Idle",
+    "majority_active": "Dolyo Chagi",
+    "majority_weighted": "Dolyo Chagi",
+    "expected": "Ap Chagi",
+    "match_all": false,
+    "match_active": false,
+    "match_weighted": false,
+    "total_windows": 199,
+    "active_windows": 99
+  },
+  "Roundhouse": {
+    "distribution": {
+      "Idle": 155,
+      "Dolyo Chagi": 37,
+      "Ap Chagi": 7
+    },
+    "active_distribution": {
+      "Idle": 46,
+      "Dolyo Chagi": 37,
+      "Ap Chagi": 7
+    },
+    "majority_all": "Idle",
+    "majority_active": "Idle",
+    "majority_weighted": "Idle",
+    "expected": "Dolyo Chagi",
+    "match_all": false,
+    "match_active": false,
+    "match_weighted": false,
+    "total_windows": 199,
+    "active_windows": 90
+  },
+  "Standing": {
+    "distribution": {
+      "Idle": 129
+    },
+    "active_distribution": {
+      "Idle": 78
+    },
+    "majority_all": "Idle",
+    "majority_active": "Idle",
+    "majority_weighted": "Idle",
+    "expected": "Idle",
+    "match_all": true,
+    "match_active": true,
+    "match_weighted": true,
+    "total_windows": 129,
+    "active_windows": 78
+  }
+}

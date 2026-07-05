@@ -1,0 +1,392 @@
+{
+  "Front Kick": [
+    {
+      "seg": 1,
+      "time": 7.5,
+      "pred": "Idle",
+      "conf": 0.422
+    },
+    {
+      "seg": 2,
+      "time": 8.0,
+      "pred": "Idle",
+      "conf": 0.83
+    },
+    {
+      "seg": 3,
+      "time": 10.3,
+      "pred": "Idle",
+      "conf": 0.52
+    },
+    {
+      "seg": 4,
+      "time": 10.9,
+      "pred": "Idle",
+      "conf": 0.564
+    },
+    {
+      "seg": 5,
+      "time": 13.0,
+      "pred": "Idle",
+      "conf": 0.427
+    },
+    {
+      "seg": 6,
+      "time": 13.5,
+      "pred": "Idle",
+      "conf": 0.484
+    },
+    {
+      "seg": 7,
+      "time": 15.5,
+      "pred": "Idle",
+      "conf": 0.481
+    },
+    {
+      "seg": 8,
+      "time": 16.1,
+      "pred": "Idle",
+      "conf": 0.488
+    },
+    {
+      "seg": 9,
+      "time": 17.9,
+      "pred": "Idle",
+      "conf": 0.44
+    },
+    {
+      "seg": 10,
+      "time": 19.8,
+      "pred": "Idle",
+      "conf": 0.548
+    },
+    {
+      "seg": 11,
+      "time": 23.8,
+      "pred": "Idle",
+      "conf": 0.521
+    },
+    {
+      "seg": 12,
+      "time": 24.5,
+      "pred": "Idle",
+      "conf": 0.578
+    },
+    {
+      "seg": 13,
+      "time": 26.6,
+      "pred": "Idle",
+      "conf": 0.463
+    },
+    {
+      "seg": 14,
+      "time": 29.4,
+      "pred": "Idle",
+      "conf": 0.413
+    },
+    {
+      "seg": 15,
+      "time": 32.2,
+      "pred": "Idle",
+      "conf": 0.468
+    },
+    {
+      "seg": 16,
+      "time": 32.8,
+      "pred": "Idle",
+      "conf": 0.756
+    },
+    {
+      "seg": 17,
+      "time": 34.3,
+      "pred": "Idle",
+      "conf": 0.505
+    },
+    {
+      "seg": 18,
+      "time": 35.2,
+      "pred": "Idle",
+      "conf": 0.832
+    },
+    {
+      "seg": 19,
+      "time": 36.8,
+      "pred": "Dolyo Chagi",
+      "conf": 0.602
+    },
+    {
+      "seg": 20,
+      "time": 37.4,
+      "pred": "Idle",
+      "conf": 0.785
+    }
+  ],
+  "Roundhouse": [
+    {
+      "seg": 1,
+      "time": 7.7,
+      "pred": "Dolyo Chagi",
+      "conf": 0.85
+    },
+    {
+      "seg": 2,
+      "time": 8.3,
+      "pred": "Idle",
+      "conf": 0.673
+    },
+    {
+      "seg": 3,
+      "time": 8.8,
+      "pred": "Idle",
+      "conf": 0.789
+    },
+    {
+      "seg": 4,
+      "time": 12.6,
+      "pred": "Idle",
+      "conf": 0.717
+    },
+    {
+      "seg": 5,
+      "time": 14.8,
+      "pred": "Idle",
+      "conf": 0.632
+    },
+    {
+      "seg": 6,
+      "time": 17.0,
+      "pred": "Idle",
+      "conf": 0.808
+    },
+    {
+      "seg": 7,
+      "time": 17.5,
+      "pred": "Idle",
+      "conf": 0.424
+    },
+    {
+      "seg": 8,
+      "time": 18.7,
+      "pred": "Idle",
+      "conf": 0.883
+    },
+    {
+      "seg": 9,
+      "time": 19.7,
+      "pred": "Idle",
+      "conf": 0.554
+    },
+    {
+      "seg": 10,
+      "time": 20.9,
+      "pred": "Idle",
+      "conf": 0.941
+    },
+    {
+      "seg": 11,
+      "time": 22.3,
+      "pred": "Idle",
+      "conf": 0.515
+    },
+    {
+      "seg": 12,
+      "time": 24.2,
+      "pred": "Idle",
+      "conf": 0.855
+    },
+    {
+      "seg": 13,
+      "time": 24.7,
+      "pred": "Dolyo Chagi",
+      "conf": 0.735
+    },
+    {
+      "seg": 14,
+      "time": 25.3,
+      "pred": "Idle",
+      "conf": 0.689
+    },
+    {
+      "seg": 15,
+      "time": 28.4,
+      "pred": "Idle",
+      "conf": 0.733
+    },
+    {
+      "seg": 16,
+      "time": 28.9,
+      "pred": "Idle",
+      "conf": 0.571
+    },
+    {
+      "seg": 17,
+      "time": 29.5,
+      "pred": "Idle",
+      "conf": 0.919
+    },
+    {
+      "seg": 18,
+      "time": 32.0,
+      "pred": "Idle",
+      "conf": 0.522
+    },
+    {
+      "seg": 19,
+      "time": 32.5,
+      "pred": "Idle",
+      "conf": 0.661
+    },
+    {
+      "seg": 20,
+      "time": 33.3,
+      "pred": "Idle",
+      "conf": 0.87
+    },
+    {
+      "seg": 21,
+      "time": 34.9,
+      "pred": "Idle",
+      "conf": 0.567
+    },
+    {
+      "seg": 22,
+      "time": 35.4,
+      "pred": "Idle",
+      "conf": 0.835
+    },
+    {
+      "seg": 23,
+      "time": 37.5,
+      "pred": "Idle",
+      "conf": 0.57
+    }
+  ],
+  "Standing": [
+    {
+      "seg": 1,
+      "time": 4.4,
+      "pred": "Idle",
+      "conf": 0.833
+    },
+    {
+      "seg": 2,
+      "time": 5.1,
+      "pred": "Idle",
+      "conf": 0.861
+    },
+    {
+      "seg": 3,
+      "time": 6.0,
+      "pred": "Idle",
+      "conf": 0.844
+    },
+    {
+      "seg": 4,
+      "time": 6.6,
+      "pred": "Idle",
+      "conf": 0.749
+    },
+    {
+      "seg": 5,
+      "time": 7.1,
+      "pred": "Idle",
+      "conf": 0.722
+    },
+    {
+      "seg": 6,
+      "time": 8.1,
+      "pred": "Idle",
+      "conf": 0.655
+    },
+    {
+      "seg": 7,
+      "time": 10.2,
+      "pred": "Idle",
+      "conf": 0.922
+    },
+    {
+      "seg": 8,
+      "time": 10.8,
+      "pred": "Idle",
+      "conf": 0.729
+    },
+    {
+      "seg": 9,
+      "time": 12.0,
+      "pred": "Idle",
+      "conf": 0.87
+    },
+    {
+      "seg": 10,
+      "time": 12.6,
+      "pred": "Idle",
+      "conf": 0.815
+    },
+    {
+      "seg": 11,
+      "time": 13.9,
+      "pred": "Idle",
+      "conf": 0.835
+    },
+    {
+      "seg": 12,
+      "time": 14.6,
+      "pred": "Idle",
+      "conf": 0.949
+    },
+    {
+      "seg": 13,
+      "time": 16.4,
+      "pred": "Idle",
+      "conf": 0.872
+    },
+    {
+      "seg": 14,
+      "time": 19.2,
+      "pred": "Idle",
+      "conf": 0.924
+    },
+    {
+      "seg": 15,
+      "time": 19.9,
+      "pred": "Idle",
+      "conf": 0.756
+    },
+    {
+      "seg": 16,
+      "time": 20.8,
+      "pred": "Idle",
+      "conf": 0.774
+    },
+    {
+      "seg": 17,
+      "time": 21.8,
+      "pred": "Idle",
+      "conf": 0.75
+    },
+    {
+      "seg": 18,
+      "time": 22.5,
+      "pred": "Idle",
+      "conf": 0.654
+    },
+    {
+      "seg": 19,
+      "time": 23.5,
+      "pred": "Idle",
+      "conf": 0.883
+    },
+    {
+      "seg": 20,
+      "time": 24.6,
+      "pred": "Idle",
+      "conf": 0.899
+    },
+    {
+      "seg": 21,
+      "time": 25.2,
+      "pred": "Idle",
+      "conf": 0.717
+    }
+  ]
+}

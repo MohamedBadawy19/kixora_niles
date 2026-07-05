@@ -1,0 +1,9 @@
+__pycache__/
+*.pyc
+.env
+.DS_Store
+__MACOSX/
+kixora_app/sessions/
+raw_data/
+my_records/
+*.csv

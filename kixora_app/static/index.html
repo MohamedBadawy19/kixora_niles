@@ -1,0 +1,414 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Kixora — Taekwondo Recording</title>
+<meta name="description" content="Kixora real-time taekwondo kick recording dashboard">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#060611;--surface:#0f0f1f;--card:#161628;--border:#1e1e3f;--accent:#6ee7f7;--purple:#a78bfa;--green:#34d399;--red:#f87171;--orange:#fb923c;--text:#e2e8f0;--muted:#64748b}
+body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;min-height:100vh}
+.app{display:grid;grid-template-rows:auto 1fr auto;min-height:100vh}
+header{background:var(--surface);border-bottom:1px solid var(--border);padding:12px 24px;display:flex;align-items:center;justify-content:space-between}
+.logo{font-size:1.4rem;font-weight:900;background:linear-gradient(135deg,var(--accent),var(--purple));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.hstatus{display:flex;gap:12px;align-items:center;font-size:.8rem}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--muted)}
+.dot.ok{background:var(--green);box-shadow:0 0 8px var(--green)}
+.dot.err{background:var(--red)}
+.dot.warn{background:var(--orange)}
+main{padding:20px;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:auto auto 1fr;gap:16px;max-width:1400px;margin:0 auto;width:100%}
+.session-bar{grid-column:1/-1;background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px 24px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.session-bar input{background:var(--surface);border:1px solid var(--border);color:var(--text);padding:8px 14px;border-radius:8px;font-size:.9rem;flex:1;min-width:140px}
+.session-bar input:focus{outline:none;border-color:var(--accent)}
+.btn{padding:10px 20px;border-radius:99px;border:none;font-weight:700;font-size:.85rem;cursor:pointer;transition:all .2s}
+.btn-start{background:linear-gradient(135deg,var(--accent),var(--purple));color:#060611}
+.btn-stop{background:var(--red);color:#fff}
+.btn-scan{background:var(--surface);color:var(--accent);border:1px solid var(--accent)}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.elapsed{font-size:.8rem;color:var(--muted);margin-left:auto}
+.elapsed span{color:var(--accent);font-weight:700;font-variant-numeric:tabular-nums}
+.player-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:20px;display:flex;flex-direction:column;gap:14px}
+.player-header{display:flex;align-items:center;gap:10px}
+.player-num{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--purple));display:flex;align-items:center;justify-content:center;font-weight:900;color:#060611;font-size:.9rem}
+.player-name{font-weight:700;font-size:1rem}
+.conn-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.conn-row select{background:var(--surface);border:1px solid var(--border);color:var(--text);padding:7px 10px;border-radius:8px;font-size:.8rem;flex:1}
+.tag{font-size:.7rem;padding:3px 10px;border-radius:99px;font-weight:700}
+.tag-ok{background:#064e3b;color:var(--green)}
+.tag-err{background:#450a0a;color:var(--red)}
+.tag-idle{background:#1e293b;color:var(--muted)}
+.tag-warn{background:#431407;color:var(--orange)}
+.sensors{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.sensor{background:var(--surface);border-radius:10px;padding:10px;text-align:center}
+.sensor label{font-size:.65rem;color:var(--muted);display:block;margin-bottom:4px;text-transform:uppercase}
+.sensor span{font-size:1.1rem;font-weight:700;font-variant-numeric:tabular-nums}
+.imu-bar{background:var(--surface);border-radius:8px;padding:10px;font-size:.75rem}
+.imu-bar .row{display:flex;justify-content:space-between;margin-bottom:4px}
+.imu-bar .axis{color:var(--muted)}
+.imu-bar .val{font-variant-numeric:tabular-nums;font-weight:600}
+.kick-log{background:var(--surface);border-radius:10px;padding:10px;max-height:140px;overflow-y:auto;font-size:.78rem}
+.kick-log::-webkit-scrollbar{width:4px}
+.kick-log::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
+.kick-entry{display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--border)}
+.kick-entry:last-child{border-bottom:none}
+.kick-icon{font-size:1.1rem}
+.kick-type{font-weight:700;flex:1}
+.kick-conf{color:var(--muted);font-size:.7rem}
+.kick-src{font-size:.65rem;padding:2px 6px;border-radius:99px;background:var(--border)}
+.kick-src.auto{background:#1e3a5f;color:#93c5fd}
+.kick-src.manual{background:#3b1f5e;color:#c4b5fd}
+.manual-btns{display:flex;gap:8px;flex-wrap:wrap}
+.btn-kick{padding:8px 14px;border-radius:8px;border:none;font-weight:700;font-size:.8rem;cursor:pointer;transition:all .2s;flex:1}
+.btn-ap{background:#0c4a6e;color:#7dd3fc;border:1px solid #0369a1}
+.btn-ap:hover{background:#0369a1}
+.btn-dolyo{background:#3b1f5e;color:#c4b5fd;border:1px solid #7c3aed}
+.btn-dolyo:hover{background:#7c3aed}
+.btn-other{background:#1c1917;color:#d6d3d1;border:1px solid #44403c}
+.btn-other:hover{background:#44403c}
+.qr-panel{grid-column:1/-1;background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px 24px}
+.qr-panel h3{font-size:.9rem;color:var(--muted);margin-bottom:10px}
+.qr-row{display:flex;gap:24px;flex-wrap:wrap}
+.qr-item{text-align:center;font-size:.75rem;color:var(--muted)}
+.qr-item a{color:var(--accent);display:block;margin-top:4px;word-break:break-all}
+.scan-results{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px;margin-top:8px;max-height:120px;overflow-y:auto;display:none}
+.scan-item{display:flex;align-items:center;gap:8px;padding:6px;cursor:pointer;border-radius:6px;font-size:.8rem}
+.scan-item:hover{background:var(--border)}
+.scan-item .sname{font-weight:700;flex:1}
+.scan-item .saddr{color:var(--muted);font-size:.7rem}
+.toast-area{position:fixed;bottom:20px;right:20px;display:flex;flex-direction:column;gap:8px;z-index:999}
+.toast{padding:10px 18px;border-radius:10px;font-size:.85rem;font-weight:600;animation:slideIn .3s ease;box-shadow:0 4px 20px rgba(0,0,0,.4)}
+.toast.kick-ap{background:#0c4a6e;color:#7dd3fc;border-left:3px solid #38bdf8}
+.toast.kick-dolyo{background:#3b1f5e;color:#c4b5fd;border-left:3px solid #a78bfa}
+.toast.info{background:#0f172a;color:var(--text);border-left:3px solid var(--accent)}
+.toast.err{background:#450a0a;color:var(--red);border-left:3px solid var(--red)}
+@keyframes slideIn{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
+@keyframes slideOut{to{transform:translateX(120%);opacity:0}}
+.rec-dot{width:10px;height:10px;border-radius:50%;background:var(--red);animation:blink 1s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+footer{padding:10px 24px;text-align:center;font-size:.75rem;color:var(--muted);border-top:1px solid var(--border)}
+@media(max-width:700px){main{grid-template-columns:1fr}.player-card{min-width:0}}
+</style></head>
+<body>
+<div class="app">
+<header>
+  <div class="logo">⚡ Kixora</div>
+  <div class="hstatus">
+    <a href="/sessions_ui" style="color:var(--accent);text-decoration:none;margin-right:12px;font-weight:600;font-size:.85rem">View Sessions</a>
+    <div class="dot" id="wsDot"></div><span id="wsLabel">Connecting…</span>
+    <div style="width:1px;height:14px;background:var(--border)"></div>
+    <div class="dot" id="modelDot"></div><span id="modelLabel">Model</span>
+  </div>
+</header>
+<main>
+  <!-- Session bar -->
+  <div class="session-bar">
+    <input id="sessionName" placeholder="Session name" value="Training Session">
+    <input id="p1name" placeholder="Player 1 name" value="Player 1" style="max-width:160px">
+    <input id="p2name" placeholder="Player 2 name" value="Player 2" style="max-width:160px">
+    <button class="btn btn-start" id="btnStart" onclick="startSession()">▶ Start Recording</button>
+    <button class="btn btn-stop" id="btnStop" onclick="stopSession()" disabled>■ Stop</button>
+    <div class="elapsed" id="elapsedDiv" style="display:none"><div class="rec-dot" style="display:inline-block;margin-right:6px"></div>REC <span id="elapsedVal">0:00</span></div>
+  </div>
+
+  <!-- Player 1 -->
+  <div class="player-card" id="card1">
+    <div class="player-header">
+      <div class="player-num">1</div>
+      <div class="player-name" id="pname1">Player 1</div>
+      <span class="tag tag-idle" id="ptag1">idle</span>
+    </div>
+    <div style="font-size:.75rem;color:var(--muted);font-weight:600">ESP32 SOCK (BLE)</div>
+    <div class="conn-row">
+      <select id="blesel1"><option value="">— select device —</option></select>
+      <button class="btn btn-scan" onclick="scanBLE()" style="padding:7px 14px;font-size:.8rem">Scan</button>
+      <button class="btn btn-start" id="blecbtn1" onclick="connectBLE(1)" style="padding:7px 14px;font-size:.8rem">Connect</button>
+    </div>
+    <div class="scan-results" id="scanRes1"></div>
+    <div style="font-size:.75rem;color:var(--muted);font-weight:600">PHONE IMU</div>
+    <div style="font-size:.8rem">Open on phone: <a id="phonelink1" style="color:var(--accent)" href="#" target="_blank"></a></div>
+    <span class="tag tag-idle" id="phonetag1" style="width:fit-content">not connected</span>
+    <div class="imu-bar" id="imu1">
+      <div class="row"><span class="axis">X</span><span class="val" id="ix1">—</span></div>
+      <div class="row"><span class="axis">Y</span><span class="val" id="iy1">—</span></div>
+      <div class="row"><span class="axis">Z</span><span class="val" id="iz1">—</span></div>
+      <div class="row"><span class="axis">|a|</span><span class="val" id="imag1" style="color:var(--accent)">—</span></div>
+    </div>
+    <div style="font-size:.75rem;color:var(--muted);font-weight:600">LAST BLE HIT</div>
+    <div class="sensors">
+      <div class="sensor"><label>FSR</label><span id="fsr1">—</span></div>
+      <div class="sensor"><label>Ball</label><span id="ball1">—</span></div>
+      <div class="sensor"><label>Instep</label><span id="inst1">—</span></div>
+    </div>
+    <div style="font-size:.75rem;color:var(--muted);font-weight:600">MANUAL KICK</div>
+    <div class="manual-btns">
+      <button class="btn-kick btn-ap" onclick="manualKick(1,'Ap Chagi')">Ap Chagi</button>
+      <button class="btn-kick btn-dolyo" onclick="manualKick(1,'Dolyo Chagi')">Dolyo Chagi</button>
+      <button class="btn-kick btn-other" onclick="manualKick(1,'Other')">Other</button>
+    </div>
+    <div style="font-size:.75rem;color:var(--muted);font-weight:600">KICKS LOG</div>
+    <div class="kick-log" id="klog1"></div>
+  </div>
+
+  <!-- Player 2 -->
+  <div class="player-card" id="card2">
+    <div class="player-header">
+      <div class="player-num" style="background:linear-gradient(135deg,#f472b6,#fb923c)">2</div>
+      <div class="player-name" id="pname2">Player 2</div>
+      <span class="tag tag-idle" id="ptag2">idle</span>
+    </div>
+    <div style="font-size:.75rem;color:var(--muted);font-weight:600">ESP32 SOCK (BLE)</div>
+    <div class="conn-row">
+      <select id="blesel2"><option value="">— select device —</option></select>
+      <button class="btn btn-scan" onclick="scanBLE()" style="padding:7px 14px;font-size:.8rem">Scan</button>
+      <button class="btn btn-start" id="blecbtn2" onclick="connectBLE(2)" style="padding:7px 14px;font-size:.8rem">Connect</button>
+    </div>
+    <div style="font-size:.75rem;color:var(--muted);font-weight:600">PHONE IMU</div>
+    <div style="font-size:.8rem">Open on phone: <a id="phonelink2" style="color:var(--accent)" href="#" target="_blank"></a></div>
+    <span class="tag tag-idle" id="phonetag2" style="width:fit-content">not connected</span>
+    <div class="imu-bar" id="imu2">
+      <div class="row"><span class="axis">X</span><span class="val" id="ix2">—</span></div>
+      <div class="row"><span class="axis">Y</span><span class="val" id="iy2">—</span></div>
+      <div class="row"><span class="axis">Z</span><span class="val" id="iz2">—</span></div>
+      <div class="row"><span class="axis">|a|</span><span class="val" id="imag2" style="color:var(--accent)">—</span></div>
+    </div>
+    <div style="font-size:.75rem;color:var(--muted);font-weight:600">LAST BLE HIT</div>
+    <div class="sensors">
+      <div class="sensor"><label>FSR</label><span id="fsr2">—</span></div>
+      <div class="sensor"><label>Ball</label><span id="ball2">—</span></div>
+      <div class="sensor"><label>Instep</label><span id="inst2">—</span></div>
+    </div>
+    <div style="font-size:.75rem;color:var(--muted);font-weight:600">MANUAL KICK</div>
+    <div class="manual-btns">
+      <button class="btn-kick btn-ap" onclick="manualKick(2,'Ap Chagi')">Ap Chagi</button>
+      <button class="btn-kick btn-dolyo" onclick="manualKick(2,'Dolyo Chagi')">Dolyo Chagi</button>
+      <button class="btn-kick btn-other" onclick="manualKick(2,'Other')">Other</button>
+    </div>
+    <div style="font-size:.75rem;color:var(--muted);font-weight:600">KICKS LOG</div>
+    <div class="kick-log" id="klog2"></div>
+  </div>
+
+  <div class="qr-panel">
+    <h3>📱 Phone Setup — open these URLs on each player's phone (same WiFi as this PC)</h3>
+    <div style="background:#0a0a0f;border-radius:10px;padding:12px;margin-bottom:10px;font-family:monospace">
+      <div style="color:var(--muted);font-size:.75rem;margin-bottom:6px">SERVER LAN IP (auto-detected)</div>
+      <div id="lanIpDisplay" style="color:var(--accent);font-size:1.1rem;font-weight:700">detecting…</div>
+    </div>
+    <div class="qr-row" id="qrRow"></div>
+    <div style="margin-top:10px;font-size:.78rem;color:var(--muted)">
+      ⚠️ Phone and PC must be on <strong style="color:var(--text)">the same WiFi network</strong>.
+      If you change WiFi, restart the server — the IP updates automatically.
+    </div>
+  </div>
+</main>
+<footer>Kixora v1.0 — Taekwondo Smart Recording System — Data saved to sessions/</footer>
+</div>
+<div class="toast-area" id="toasts"></div>
+
+<script>
+const API = 'http://' + location.hostname + ':8000';
+let ws, sessionActive=false, elapsedTimer, elapsedStart=0;
+let kickCounts={1:{},2:{}}, bleDevices=[];
+
+// ── WebSocket ─────────────────────────────────────────────────
+function connectWS(){
+  ws = new WebSocket('ws://' + location.hostname + ':8000/ws/ui');
+  ws.onopen=()=>{ setWS(true); };
+  ws.onclose=()=>{ setWS(false); setTimeout(connectWS,3000); };
+  ws.onerror=()=>{ setWS(false); };
+  ws.onmessage=(e)=>{ handleMsg(JSON.parse(e.data)); };
+}
+function setWS(ok){
+  document.getElementById('wsDot').className='dot '+(ok?'ok':'err');
+  document.getElementById('wsLabel').textContent=ok?'Server OK':'Server offline';
+}
+function handleMsg(m){
+  if(m.type==='init'){
+    document.getElementById('modelDot').className='dot '+(m.model_available?'ok':'warn');
+    document.getElementById('modelLabel').textContent=m.model_available?'Model OK':'IMU-only';
+    if(m.session) restoreSession(m.session);
+    (m.phones_connected||[]).forEach(p=>setPhoneTag(p,true));
+    updateBLEStatus(m.ble_status);
+  }
+  else if(m.type==='ble_packet'){ onBLEPacket(m.player,m.data); }
+  else if(m.type==='ble_status'){ onBLEStatus(m.player,m.status,m.extra); }
+  else if(m.type==='phone_connected'){ setPhoneTag(m.player,true); }
+  else if(m.type==='phone_disconnected'){ setPhoneTag(m.player,false); }
+  else if(m.type==='imu_sample'){ onIMU(m.player,m.x,m.y,m.z,m.mag); }
+  else if(m.type==='kick_detected'){ onKick(m.player,m.kick,m.ts); }
+  else if(m.type==='session_started'){ onSessionStarted(m.summary); }
+  else if(m.type==='session_stopped'){ onSessionStopped(m.summary); }
+}
+
+// ── BLE ──────────────────────────────────────────────────────
+async function scanBLE(){
+  toast('Scanning for Kixora BLE devices…','info');
+  const r=await api('POST','/ble/scan');
+  bleDevices=r.devices||[];
+  if(!bleDevices.length){ toast('No devices found — BLE optional, IMU works alone','info'); return; }
+  [1,2].forEach(pid=>{
+    const sel=document.getElementById('blesel'+pid);
+    sel.innerHTML='<option value="">— select device —</option>';
+    bleDevices.forEach(d=>{ const o=document.createElement('option'); o.value=d.address; o.textContent=d.name+' '+d.address+' RSSI:'+d.rssi; sel.appendChild(o); });
+  });
+  toast('Found '+bleDevices.length+' device(s)','info');
+}
+async function connectBLE(pid){
+  const addr=document.getElementById('blesel'+pid).value;
+  if(!addr){ toast('Select a device first','err'); return; }
+  await api('POST','/ble/connect',{player_id:pid,address:addr});
+}
+async function disconnectBLE(pid){
+  await api('POST','/ble/disconnect',{player_id:pid});
+  document.getElementById('blecbtn'+pid).textContent='Connect';
+  document.getElementById('blecbtn'+pid).onclick=()=>connectBLE(pid);
+}
+function onBLEStatus(pid,status,extra){
+  const tag=document.getElementById('ptag'+pid);
+  const btn=document.getElementById('blecbtn'+pid);
+  if(status==='connected'){ tag.className='tag tag-ok'; tag.textContent='BLE ✓'; btn.textContent='Disconnect'; btn.onclick=()=>disconnectBLE(pid); toast('Player '+pid+' sock connected','info'); }
+  else if(status==='disconnected'){ tag.className='tag tag-idle'; tag.textContent='idle'; btn.textContent='Connect'; btn.onclick=()=>connectBLE(pid); }
+  else if(status==='error'){ tag.className='tag tag-err'; tag.textContent='error'; toast('P'+pid+' BLE: '+(extra.error||'error'),'err'); }
+  else if(status==='connecting'){ tag.className='tag tag-warn'; tag.textContent='connecting…'; }
+}
+function updateBLEStatus(s){ if(!s) return; Object.entries(s).forEach(([pid,v])=>onBLEStatus(parseInt(pid),v.connected?'connected':'disconnected',{})); }
+function onBLEPacket(pid,pkt){ document.getElementById('fsr'+pid).textContent=pkt.f??'—'; document.getElementById('ball'+pid).textContent=pkt.b??'—'; document.getElementById('inst'+pid).textContent=pkt.i??'—'; }
+
+// ── IMU ──────────────────────────────────────────────────────
+function onIMU(pid,x,y,z,mag){
+  document.getElementById('ix'+pid).textContent=x.toFixed(2);
+  document.getElementById('iy'+pid).textContent=y.toFixed(2);
+  document.getElementById('iz'+pid).textContent=z.toFixed(2);
+  if(mag!==undefined) document.getElementById('imag'+pid).textContent='|a|='+mag;
+}
+function setPhoneTag(pid,ok){
+  const el=document.getElementById('phonetag'+pid);
+  el.className='tag '+(ok?'tag-ok':'tag-idle');
+  el.textContent=ok?'phone streaming ✓':'not connected';
+}
+
+// ── Kicks ────────────────────────────────────────────────────
+function onKick(pid,kick,ts){
+  const t=kick.type; const conf=kick.confidence; const src=kick.source||'auto';
+  const icon=t.includes('Ap')?'🦵':t.includes('Dolyo')?'🌀':'⚡';
+  const cls=t.includes('Ap')?'kick-ap':t.includes('Dolyo')?'kick-dolyo':'info';
+  toast(icon+' P'+pid+': '+t+(conf<1?' ('+Math.round(conf*100)+'%)':''),cls);
+  const lg=document.getElementById('klog'+pid);
+  const div=document.createElement('div'); div.className='kick-entry';
+  div.innerHTML='<span class="kick-icon">'+icon+'</span><span class="kick-type">'+t+'</span><span class="kick-conf">'+(conf<1?Math.round(conf*100)+'%':'manual')+'</span><span class="kick-src '+src+'">'+src+'</span>';
+  lg.prepend(div);
+  if(lg.children.length>60) lg.lastChild.remove();
+  kickCounts[pid][t]=(kickCounts[pid][t]||0)+1;
+}
+
+// ── Manual kick ──────────────────────────────────────────────
+async function manualKick(pid,type){ await api('POST','/kick/manual',{player_id:pid,kick_type:type}); }
+
+// ── Session ──────────────────────────────────────────────────
+async function startSession(){
+  await api('POST','/session/start',{
+    session_name:document.getElementById('sessionName').value||'Training',
+    player1_name:document.getElementById('p1name').value||'Player 1',
+    player2_name:document.getElementById('p2name').value||'Player 2',
+  });
+}
+async function stopSession(){ await api('POST','/session/stop'); }
+function onSessionStarted(s){
+  sessionActive=true;
+  document.getElementById('btnStart').disabled=true;
+  document.getElementById('btnStop').disabled=false;
+  document.getElementById('elapsedDiv').style.display='flex';
+  document.getElementById('pname1').textContent=s.player_names&&s.player_names[1]||'Player 1';
+  document.getElementById('pname2').textContent=s.player_names&&s.player_names[2]||'Player 2';
+  elapsedStart=Date.now();
+  clearInterval(elapsedTimer);
+  elapsedTimer=setInterval(()=>{ const t=Math.floor((Date.now()-elapsedStart)/1000); document.getElementById('elapsedVal').textContent=Math.floor(t/60)+':'+(t%60+'').padStart(2,'0'); },500);
+  toast('● Recording started','info');
+}
+function onSessionStopped(s){
+  sessionActive=false;
+  document.getElementById('btnStart').disabled=false;
+  document.getElementById('btnStop').disabled=true;
+  document.getElementById('elapsedDiv').style.display='none';
+  clearInterval(elapsedTimer);
+  toast('Session saved → '+s.session_dir,'info');
+}
+function restoreSession(s){ if(s&&s.is_recording) onSessionStarted(s); }
+
+// ── Phone links ──────────────────────────────────────────────
+function buildPhoneLinks(ip, port){
+  const base='http://'+ip+':'+port;
+  [1,2].forEach(pid=>{
+    const url=base+'/phone/'+pid;
+    document.getElementById('phonelink'+pid).href=url;
+    document.getElementById('phonelink'+pid).textContent=url;
+  });
+  const row=document.getElementById('qrRow'); row.innerHTML='';
+  [1,2].forEach(pid=>{
+    const url=base+'/phone/'+pid;
+    const div=document.createElement('div'); div.className='qr-item';
+    div.innerHTML='<strong style="color:var(--text)">Player '+pid+'</strong><a href="'+url+'" target="_blank">'+url+'</a><br><small>iPhone: Safari only → allow motion&nbsp;&nbsp;|&nbsp;&nbsp;Android: any browser</small>';
+    row.appendChild(div);
+  });
+}
+
+// ── Toast ────────────────────────────────────────────────────
+function toast(msg,cls='info'){
+  const area=document.getElementById('toasts');
+  const el=document.createElement('div'); el.className='toast '+cls; el.textContent=msg;
+  area.appendChild(el);
+  setTimeout(()=>{ el.style.animation='slideOut .3s ease forwards'; setTimeout(()=>el.remove(),300); },4000);
+}
+
+// ── API helper ───────────────────────────────────────────────
+async function api(method,path,body){
+  try{
+    const ctrl=new AbortController();
+    const tid=setTimeout(()=>ctrl.abort(),5000);
+    const r=await fetch(API+path,{method,signal:ctrl.signal,headers:{'Content-Type':'application/json'},body:body?JSON.stringify(body):undefined});
+    clearTimeout(tid);
+    return await r.json();
+  }catch(e){ if(e.name!=='AbortError') toast('API error: '+e.message,'err'); return {}; }
+}
+
+// ── Init ────────────────────────────────────────────────
+async function init(){
+  // Show URL-based IP immediately — no waiting
+  const ip   = location.hostname;
+  const port = 8000;
+  buildPhoneLinks(ip, port);
+  document.getElementById('lanIpDisplay').textContent = ip + ':' + port;
+  connectWS();
+  // Then try to get confirmed LAN IP from server (3s timeout)
+  try{
+    const info = await api('GET','/api/info');
+    if(info.lan_ip && info.lan_ip !== '127.0.0.1'){
+      buildPhoneLinks(info.lan_ip, info.port||8000);
+      document.getElementById('lanIpDisplay').textContent = info.lan_ip+':'+(info.port||8000);
+    }
+    document.getElementById('modelDot').className  = 'dot '+(info.model_available?'ok':'warn');
+    document.getElementById('modelLabel').textContent = info.model_available?'Model OK':'No model (IMU-only)';
+  }catch(e){
+    // fallback already shown
+  }
+}
+
+init();
+
+// ── Phone links ──────────────────────────────────────────────
+function buildPhoneLinks(ip, port){
+  const base='http://'+ip+':'+port;
+  [1,2].forEach(pid=>{
+    const url=base+'/phone/'+pid;
+    document.getElementById('phonelink'+pid).href=url;
+    document.getElementById('phonelink'+pid).textContent=url;
+  });
+  const row=document.getElementById('qrRow'); row.innerHTML='';
+  [1,2].forEach(pid=>{
+    const url=base+'/phone/'+pid;
+    const div=document.createElement('div'); div.className='qr-item';
+    div.innerHTML='<strong>Player '+pid+'</strong><a href="'+url+'" target="_blank">'+url+'</a>'
+      +'<br><small style="color:var(--muted)">iPhone: use Safari → allow motion | Android: any browser</small>';
+    row.appendChild(div);
+  });
+}
+
+init();
+</script>
+</body></html>

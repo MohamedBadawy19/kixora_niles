@@ -1,0 +1,624 @@
+{
+  "Front Kick": [
+    {
+      "seg": 1,
+      "time": 7.4,
+      "pred": "Idle",
+      "conf": 0.464,
+      "probs": {
+        "Ap Chagi": 0.2,
+        "Dolyo Chagi": 0.46,
+        "Idle": 0.34
+      }
+    },
+    {
+      "seg": 2,
+      "time": 8.0,
+      "pred": "Idle",
+      "conf": 0.771,
+      "probs": {
+        "Ap Chagi": 0.12,
+        "Dolyo Chagi": 0.11,
+        "Idle": 0.77
+      }
+    },
+    {
+      "seg": 3,
+      "time": 10.3,
+      "pred": "Idle",
+      "conf": 0.433,
+      "probs": {
+        "Ap Chagi": 0.27,
+        "Dolyo Chagi": 0.3,
+        "Idle": 0.43
+      }
+    },
+    {
+      "seg": 4,
+      "time": 10.9,
+      "pred": "Idle",
+      "conf": 0.452,
+      "probs": {
+        "Ap Chagi": 0.27,
+        "Dolyo Chagi": 0.28,
+        "Idle": 0.45
+      }
+    },
+    {
+      "seg": 5,
+      "time": 13.0,
+      "pred": "Idle",
+      "conf": 0.418,
+      "probs": {
+        "Ap Chagi": 0.23,
+        "Dolyo Chagi": 0.42,
+        "Idle": 0.35
+      }
+    },
+    {
+      "seg": 6,
+      "time": 13.5,
+      "pred": "Idle",
+      "conf": 0.392,
+      "probs": {
+        "Ap Chagi": 0.27,
+        "Dolyo Chagi": 0.33,
+        "Idle": 0.39
+      }
+    },
+    {
+      "seg": 7,
+      "time": 15.5,
+      "pred": "Dolyo Chagi",
+      "conf": 0.599,
+      "probs": {
+        "Ap Chagi": 0.15,
+        "Dolyo Chagi": 0.6,
+        "Idle": 0.25
+      }
+    },
+    {
+      "seg": 8,
+      "time": 16.1,
+      "pred": "Idle",
+      "conf": 0.409,
+      "probs": {
+        "Ap Chagi": 0.26,
+        "Dolyo Chagi": 0.33,
+        "Idle": 0.41
+      }
+    },
+    {
+      "seg": 9,
+      "time": 17.9,
+      "pred": "Idle",
+      "conf": 0.401,
+      "probs": {
+        "Ap Chagi": 0.23,
+        "Dolyo Chagi": 0.4,
+        "Idle": 0.36
+      }
+    },
+    {
+      "seg": 10,
+      "time": 19.8,
+      "pred": "Idle",
+      "conf": 0.446,
+      "probs": {
+        "Ap Chagi": 0.27,
+        "Dolyo Chagi": 0.29,
+        "Idle": 0.45
+      }
+    },
+    {
+      "seg": 11,
+      "time": 23.8,
+      "pred": "Idle",
+      "conf": 0.434,
+      "probs": {
+        "Ap Chagi": 0.23,
+        "Dolyo Chagi": 0.34,
+        "Idle": 0.43
+      }
+    },
+    {
+      "seg": 12,
+      "time": 24.5,
+      "pred": "Idle",
+      "conf": 0.46,
+      "probs": {
+        "Ap Chagi": 0.27,
+        "Dolyo Chagi": 0.27,
+        "Idle": 0.46
+      }
+    },
+    {
+      "seg": 13,
+      "time": 26.6,
+      "pred": "Idle",
+      "conf": 0.472,
+      "probs": {
+        "Ap Chagi": 0.17,
+        "Dolyo Chagi": 0.47,
+        "Idle": 0.36
+      }
+    },
+    {
+      "seg": 14,
+      "time": 29.4,
+      "pred": "Idle",
+      "conf": 0.407,
+      "probs": {
+        "Ap Chagi": 0.26,
+        "Dolyo Chagi": 0.41,
+        "Idle": 0.34
+      }
+    },
+    {
+      "seg": 15,
+      "time": 32.2,
+      "pred": "Idle",
+      "conf": 0.427,
+      "probs": {
+        "Ap Chagi": 0.2,
+        "Dolyo Chagi": 0.43,
+        "Idle": 0.38
+      }
+    },
+    {
+      "seg": 16,
+      "time": 32.8,
+      "pred": "Idle",
+      "conf": 0.651,
+      "probs": {
+        "Ap Chagi": 0.19,
+        "Dolyo Chagi": 0.16,
+        "Idle": 0.65
+      }
+    },
+    {
+      "seg": 17,
+      "time": 34.2,
+      "pred": "Idle",
+      "conf": 0.428,
+      "probs": {
+        "Ap Chagi": 0.16,
+        "Dolyo Chagi": 0.43,
+        "Idle": 0.41
+      }
+    },
+    {
+      "seg": 18,
+      "time": 35.2,
+      "pred": "Idle",
+      "conf": 0.744,
+      "probs": {
+        "Ap Chagi": 0.12,
+        "Dolyo Chagi": 0.13,
+        "Idle": 0.74
+      }
+    },
+    {
+      "seg": 19,
+      "time": 36.8,
+      "pred": "Dolyo Chagi",
+      "conf": 0.687,
+      "probs": {
+        "Ap Chagi": 0.09,
+        "Dolyo Chagi": 0.69,
+        "Idle": 0.22
+      }
+    },
+    {
+      "seg": 20,
+      "time": 37.4,
+      "pred": "Idle",
+      "conf": 0.683,
+      "probs": {
+        "Ap Chagi": 0.17,
+        "Dolyo Chagi": 0.15,
+        "Idle": 0.68
+      }
+    }
+  ],
+  "Roundhouse": [
+    {
+      "seg": 1,
+      "time": 7.7,
+      "pred": "Dolyo Chagi",
+      "conf": 0.858,
+      "probs": {
+        "Ap Chagi": 0.06,
+        "Dolyo Chagi": 0.86,
+        "Idle": 0.09
+      }
+    },
+    {
+      "seg": 2,
+      "time": 8.3,
+      "pred": "Idle",
+      "conf": 0.511,
+      "probs": {
+        "Ap Chagi": 0.29,
+        "Dolyo Chagi": 0.19,
+        "Idle": 0.51
+      }
+    },
+    {
+      "seg": 3,
+      "time": 8.8,
+      "pred": "Idle",
+      "conf": 0.7,
+      "probs": {
+        "Ap Chagi": 0.16,
+        "Dolyo Chagi": 0.14,
+        "Idle": 0.7
+      }
+    },
+    {
+      "seg": 4,
+      "time": 14.8,
+      "pred": "Idle",
+      "conf": 0.521,
+      "probs": {
+        "Ap Chagi": 0.28,
+        "Dolyo Chagi": 0.2,
+        "Idle": 0.52
+      }
+    },
+    {
+      "seg": 5,
+      "time": 17.0,
+      "pred": "Idle",
+      "conf": 0.727,
+      "probs": {
+        "Ap Chagi": 0.15,
+        "Dolyo Chagi": 0.13,
+        "Idle": 0.73
+      }
+    },
+    {
+      "seg": 6,
+      "time": 17.5,
+      "pred": "Dolyo Chagi",
+      "conf": 0.54,
+      "probs": {
+        "Ap Chagi": 0.2,
+        "Dolyo Chagi": 0.54,
+        "Idle": 0.26
+      }
+    },
+    {
+      "seg": 7,
+      "time": 18.7,
+      "pred": "Idle",
+      "conf": 0.876,
+      "probs": {
+        "Ap Chagi": 0.06,
+        "Dolyo Chagi": 0.06,
+        "Idle": 0.88
+      }
+    },
+    {
+      "seg": 8,
+      "time": 19.7,
+      "pred": "Idle",
+      "conf": 0.442,
+      "probs": {
+        "Ap Chagi": 0.27,
+        "Dolyo Chagi": 0.29,
+        "Idle": 0.44
+      }
+    },
+    {
+      "seg": 9,
+      "time": 22.3,
+      "pred": "Idle",
+      "conf": 0.409,
+      "probs": {
+        "Ap Chagi": 0.29,
+        "Dolyo Chagi": 0.3,
+        "Idle": 0.41
+      }
+    },
+    {
+      "seg": 10,
+      "time": 24.2,
+      "pred": "Idle",
+      "conf": 0.796,
+      "probs": {
+        "Ap Chagi": 0.11,
+        "Dolyo Chagi": 0.1,
+        "Idle": 0.8
+      }
+    },
+    {
+      "seg": 11,
+      "time": 24.7,
+      "pred": "Dolyo Chagi",
+      "conf": 0.773,
+      "probs": {
+        "Ap Chagi": 0.08,
+        "Dolyo Chagi": 0.77,
+        "Idle": 0.14
+      }
+    },
+    {
+      "seg": 12,
+      "time": 25.2,
+      "pred": "Idle",
+      "conf": 0.65,
+      "probs": {
+        "Ap Chagi": 0.19,
+        "Dolyo Chagi": 0.16,
+        "Idle": 0.65
+      }
+    },
+    {
+      "seg": 13,
+      "time": 28.4,
+      "pred": "Idle",
+      "conf": 0.632,
+      "probs": {
+        "Ap Chagi": 0.19,
+        "Dolyo Chagi": 0.18,
+        "Idle": 0.63
+      }
+    },
+    {
+      "seg": 14,
+      "time": 28.9,
+      "pred": "Idle",
+      "conf": 0.47,
+      "probs": {
+        "Ap Chagi": 0.3,
+        "Dolyo Chagi": 0.23,
+        "Idle": 0.47
+      }
+    },
+    {
+      "seg": 15,
+      "time": 32.0,
+      "pred": "Idle",
+      "conf": 0.379,
+      "probs": {
+        "Ap Chagi": 0.29,
+        "Dolyo Chagi": 0.33,
+        "Idle": 0.38
+      }
+    },
+    {
+      "seg": 16,
+      "time": 34.8,
+      "pred": "Idle",
+      "conf": 0.464,
+      "probs": {
+        "Ap Chagi": 0.25,
+        "Dolyo Chagi": 0.28,
+        "Idle": 0.46
+      }
+    },
+    {
+      "seg": 17,
+      "time": 37.5,
+      "pred": "Idle",
+      "conf": 0.46,
+      "probs": {
+        "Ap Chagi": 0.27,
+        "Dolyo Chagi": 0.27,
+        "Idle": 0.46
+      }
+    }
+  ],
+  "Standing": [
+    {
+      "seg": 1,
+      "time": 4.4,
+      "pred": "Idle",
+      "conf": 0.757,
+      "probs": {
+        "Ap Chagi": 0.13,
+        "Dolyo Chagi": 0.11,
+        "Idle": 0.76
+      }
+    },
+    {
+      "seg": 2,
+      "time": 5.1,
+      "pred": "Idle",
+      "conf": 0.798,
+      "probs": {
+        "Ap Chagi": 0.11,
+        "Dolyo Chagi": 0.09,
+        "Idle": 0.8
+      }
+    },
+    {
+      "seg": 3,
+      "time": 6.4,
+      "pred": "Idle",
+      "conf": 0.834,
+      "probs": {
+        "Ap Chagi": 0.09,
+        "Dolyo Chagi": 0.08,
+        "Idle": 0.83
+      }
+    },
+    {
+      "seg": 4,
+      "time": 7.1,
+      "pred": "Idle",
+      "conf": 0.62,
+      "probs": {
+        "Ap Chagi": 0.21,
+        "Dolyo Chagi": 0.17,
+        "Idle": 0.62
+      }
+    },
+    {
+      "seg": 5,
+      "time": 10.2,
+      "pred": "Idle",
+      "conf": 0.879,
+      "probs": {
+        "Ap Chagi": 0.06,
+        "Dolyo Chagi": 0.06,
+        "Idle": 0.88
+      }
+    },
+    {
+      "seg": 6,
+      "time": 10.8,
+      "pred": "Idle",
+      "conf": 0.634,
+      "probs": {
+        "Ap Chagi": 0.2,
+        "Dolyo Chagi": 0.16,
+        "Idle": 0.63
+      }
+    },
+    {
+      "seg": 7,
+      "time": 12.0,
+      "pred": "Idle",
+      "conf": 0.791,
+      "probs": {
+        "Ap Chagi": 0.11,
+        "Dolyo Chagi": 0.1,
+        "Idle": 0.79
+      }
+    },
+    {
+      "seg": 8,
+      "time": 12.6,
+      "pred": "Idle",
+      "conf": 0.73,
+      "probs": {
+        "Ap Chagi": 0.15,
+        "Dolyo Chagi": 0.12,
+        "Idle": 0.73
+      }
+    },
+    {
+      "seg": 9,
+      "time": 13.9,
+      "pred": "Idle",
+      "conf": 0.729,
+      "probs": {
+        "Ap Chagi": 0.15,
+        "Dolyo Chagi": 0.12,
+        "Idle": 0.73
+      }
+    },
+    {
+      "seg": 10,
+      "time": 14.6,
+      "pred": "Idle",
+      "conf": 0.924,
+      "probs": {
+        "Ap Chagi": 0.04,
+        "Dolyo Chagi": 0.04,
+        "Idle": 0.92
+      }
+    },
+    {
+      "seg": 11,
+      "time": 16.4,
+      "pred": "Idle",
+      "conf": 0.781,
+      "probs": {
+        "Ap Chagi": 0.12,
+        "Dolyo Chagi": 0.1,
+        "Idle": 0.78
+      }
+    },
+    {
+      "seg": 12,
+      "time": 19.2,
+      "pred": "Idle",
+      "conf": 0.906,
+      "probs": {
+        "Ap Chagi": 0.05,
+        "Dolyo Chagi": 0.04,
+        "Idle": 0.91
+      }
+    },
+    {
+      "seg": 13,
+      "time": 19.9,
+      "pred": "Idle",
+      "conf": 0.668,
+      "probs": {
+        "Ap Chagi": 0.18,
+        "Dolyo Chagi": 0.15,
+        "Idle": 0.67
+      }
+    },
+    {
+      "seg": 14,
+      "time": 20.8,
+      "pred": "Idle",
+      "conf": 0.669,
+      "probs": {
+        "Ap Chagi": 0.18,
+        "Dolyo Chagi": 0.15,
+        "Idle": 0.67
+      }
+    },
+    {
+      "seg": 15,
+      "time": 21.7,
+      "pred": "Idle",
+      "conf": 0.66,
+      "probs": {
+        "Ap Chagi": 0.19,
+        "Dolyo Chagi": 0.15,
+        "Idle": 0.66
+      }
+    },
+    {
+      "seg": 16,
+      "time": 22.5,
+      "pred": "Idle",
+      "conf": 0.555,
+      "probs": {
+        "Ap Chagi": 0.25,
+        "Dolyo Chagi": 0.2,
+        "Idle": 0.56
+      }
+    },
+    {
+      "seg": 17,
+      "time": 23.5,
+      "pred": "Idle",
+      "conf": 0.828,
+      "probs": {
+        "Ap Chagi": 0.09,
+        "Dolyo Chagi": 0.08,
+        "Idle": 0.83
+      }
+    },
+    {
+      "seg": 18,
+      "time": 24.6,
+      "pred": "Idle",
+      "conf": 0.847,
+      "probs": {
+        "Ap Chagi": 0.08,
+        "Dolyo Chagi": 0.07,
+        "Idle": 0.85
+      }
+    },
+    {
+      "seg": 19,
+      "time": 25.2,
+      "pred": "Idle",
+      "conf": 0.609,
+      "probs": {
+        "Ap Chagi": 0.21,
+        "Dolyo Chagi": 0.18,
+        "Idle": 0.61
+      }
+    }
+  ]
+}

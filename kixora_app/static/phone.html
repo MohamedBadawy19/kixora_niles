@@ -1,0 +1,149 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Kixora P{{PLAYER_ID}}</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#060611;color:#e2e8f0;font-family:system-ui,sans-serif;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:20px;gap:14px}
+h1{font-size:1.6rem;font-weight:900;background:linear-gradient(135deg,#6ee7f7,#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-top:10px}
+.pid{font-size:.9rem;color:#6ee7f7;letter-spacing:.1em}
+.card{background:#0f0f1f;border:1px solid #1e1e3f;border-radius:14px;padding:16px;width:100%;max-width:360px}
+.card h2{font-size:.75rem;color:#64748b;margin-bottom:10px;text-transform:uppercase;letter-spacing:.08em}
+.status{text-align:center;padding:10px 20px;border-radius:99px;font-weight:700;font-size:.95rem;width:100%;max-width:360px}
+.s-idle{background:#1e293b;color:#94a3b8}
+.s-conn{background:#854d0e;color:#fef08a}
+.s-ok{background:#14532d;color:#86efac}
+.s-err{background:#7f1d1d;color:#fca5a5}
+.row{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;font-size:.85rem}
+.lbl{color:#64748b}
+.val{font-weight:700;font-variant-numeric:tabular-nums}
+.live{color:#6ee7f7}
+.btn{width:100%;max-width:360px;padding:14px;border-radius:99px;border:none;font-weight:700;font-size:1rem;cursor:pointer;background:linear-gradient(135deg,#6ee7f7,#a78bfa);color:#060611}
+.btn2{background:#1e293b;color:#94a3b8;margin-top:4px}
+.btn:disabled{opacity:.4}
+.warn{background:#1c1917;border:1px solid #78350f;color:#fb923c;border-radius:8px;padding:10px;font-size:.8rem;width:100%;max-width:360px;text-align:center}
+.dbg{font-size:.7rem;color:#34d399;text-align:center}
+</style></head>
+<body>
+<h1>Kixora</h1>
+<div class="pid">PLAYER {{PLAYER_ID}}</div>
+<div class="status s-idle" id="st">Tap Start</div>
+
+<div class="card">
+  <h2>Connection Debug</h2>
+  <div class="row"><span class="lbl">WebSocket</span><span class="val" id="wsst">—</span></div>
+  <div class="row"><span class="lbl">Motion events</span><span class="val live" id="evtCount">0</span></div>
+  <div class="row"><span class="lbl">Packets sent</span><span class="val live" id="pktCount">0</span></div>
+  <div class="row"><span class="lbl">Rate</span><span class="val live" id="hz">0 Hz</span></div>
+</div>
+
+<div class="card">
+  <h2>Live IMU (m/s2)</h2>
+  <div class="row"><span class="lbl">X</span><span class="val live" id="vx">—</span></div>
+  <div class="row"><span class="lbl">Y</span><span class="val live" id="vy">—</span></div>
+  <div class="row"><span class="lbl">Z</span><span class="val live" id="vz">—</span></div>
+  <div class="row"><span class="lbl">|a|</span><span class="val live" id="vmag">—</span></div>
+</div>
+
+<button class="btn" id="btn" onclick="toggle()">Start Streaming</button>
+<button class="btn btn2" onclick="testMotion()">Test Motion Sensor</button>
+<div class="warn" id="warn" style="display:none"></div>
+<div class="dbg" id="dbg"></div>
+
+<script>
+const PID=parseInt('{{PLAYER_ID}}');
+const HOST=location.hostname+':8000';
+let ws=null,active=false,hzTimer=null,evtCount=0,pktCount=0,hzCount=0;
+
+function setStatus(msg,cls){const e=document.getElementById('st');e.textContent=msg;e.className='status '+cls;}
+function warn(msg){const w=document.getElementById('warn');w.textContent=msg;w.style.display=msg?'block':'none';}
+function dbg(msg){document.getElementById('dbg').textContent=msg;}
+
+function testMotion(){
+  if(typeof DeviceMotionEvent==='undefined'){
+    warn('DeviceMotionEvent not found. Try Safari on iPhone.');return;
+  }
+  let got=false;
+  function onTest(e){
+    window.removeEventListener('devicemotion',onTest);
+    const a=e.accelerationIncludingGravity||e.acceleration||{};
+    const x=a.x,y=a.y,z=a.z;
+    if(x===null&&y===null&&z===null){
+      warn('Motion returns NULL. Android Chrome needs HTTPS. Use Safari, or Firefox, or enable HTTPS.');
+    }else if(x==0&&y==0&&z==0){
+      warn('All zeros. Move phone. If still zero check browser motion permissions in Settings.');
+    }else{
+      warn('');dbg('Motion OK: x='+x.toFixed(2)+' y='+y.toFixed(2)+' z='+z.toFixed(2));
+    }
+    got=true;
+  }
+  window.addEventListener('devicemotion',onTest);
+  setTimeout(()=>{
+    if(!got){window.removeEventListener('devicemotion',onTest);
+      warn('No motion event after 2s. Android Chrome blocks DeviceMotion on HTTP. Try: Firefox Android, Samsung Internet, or add ?allowHttp in settings.');}
+  },2000);
+}
+
+async function requestPerm(){
+  if(typeof DeviceMotionEvent==='undefined'){warn('Not supported. Use Safari.');return false;}
+  if(typeof DeviceMotionEvent.requestPermission==='function'){
+    try{const r=await DeviceMotionEvent.requestPermission();if(r!=='granted'){warn('Denied. Settings > Safari > Motion & Orientation > ON');return false;}}
+    catch(e){warn('Error: '+e.message);return false;}
+  }
+  return true;
+}
+
+function onMotion(e){
+  evtCount++;
+  document.getElementById('evtCount').textContent=evtCount;
+  const a=e.accelerationIncludingGravity||e.acceleration||{};
+  let x=a.x,y=a.y,z=a.z;
+  if(x===null||y===null||z===null){
+    if(evtCount===3)warn('Null values: Android Chrome blocks motion on HTTP. Use Firefox/Samsung Internet, or HTTPS.');
+    return;
+  }
+  x=+x||0;y=+y||0;z=+z||0;
+  const mag=Math.sqrt(x*x+y*y+z*z);
+  document.getElementById('vx').textContent=x.toFixed(3);
+  document.getElementById('vy').textContent=y.toFixed(3);
+  document.getElementById('vz').textContent=z.toFixed(3);
+  document.getElementById('vmag').textContent=mag.toFixed(3);
+  if(ws&&ws.readyState===1){
+    ws.send(JSON.stringify({x,y,z,ts:Date.now()}));
+    pktCount++;hzCount++;
+    document.getElementById('pktCount').textContent=pktCount;
+  }
+}
+
+async function toggle(){
+  if(active){stop();return;}
+  const ok=await requestPerm();if(!ok)return;
+  document.getElementById('btn').disabled=true;
+  setStatus('Connecting...','s-conn');
+  ws=new WebSocket('ws://'+HOST+'/ws/imu/'+PID);
+  ws.onopen=()=>{
+    active=true;warn('');
+    setStatus('Streaming','s-ok');
+    document.getElementById('wsst').textContent='Connected';
+    document.getElementById('btn').textContent='Stop';
+    document.getElementById('btn').disabled=false;
+    window.addEventListener('devicemotion',onMotion);
+    hzTimer=setInterval(()=>{document.getElementById('hz').textContent=hzCount+' Hz';hzCount=0;},1000);
+  };
+  ws.onerror=()=>{setStatus('Error','s-err');warn('Cannot reach '+HOST+'. Same WiFi?');document.getElementById('btn').disabled=false;document.getElementById('wsst').textContent='Error';};
+  ws.onclose=(ev)=>{document.getElementById('wsst').textContent='Closed ('+ev.code+')';if(active){setStatus('Disconnected','s-err');stop(false);}};
+}
+
+function stop(closeWs=true){
+  active=false;
+  window.removeEventListener('devicemotion',onMotion);
+  clearInterval(hzTimer);
+  if(closeWs&&ws)ws.close();
+  ws=null;
+  setStatus('Stopped','s-idle');
+  document.getElementById('btn').textContent='Start Streaming';
+  document.getElementById('hz').textContent='0 Hz';
+}
+
+setTimeout(testMotion,1500);
+</script>
+</body></html>

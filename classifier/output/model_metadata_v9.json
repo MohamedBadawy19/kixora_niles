@@ -1,0 +1,43 @@
+{
+  "version": 9,
+  "fs": 100,
+  "features": [
+    "rel_mag_peak",
+    "rel_mag_std",
+    "rel_mag_rms",
+    "rel_dyn_peak",
+    "rel_dyn_std",
+    "snr",
+    "y_std",
+    "y_rms",
+    "y_range",
+    "y_kurtosis",
+    "y_skew",
+    "y_jrms",
+    "y_jpk",
+    "x_std",
+    "x_zcr",
+    "x_kurtosis",
+    "x_jrms",
+    "xs",
+    "ys",
+    "zs",
+    "mag_kurtosis",
+    "mag_skew",
+    "mag_zcr",
+    "ttp",
+    "esym",
+    "wdur",
+    "cxy",
+    "cxz",
+    "cyz",
+    "y_df",
+    "y_lfr",
+    "y_sc"
+  ],
+  "classes": [
+    "Ap Chagi",
+    "Dolyo Chagi",
+    "Idle"
+  ]
+}

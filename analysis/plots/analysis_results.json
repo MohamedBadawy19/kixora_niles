@@ -1,0 +1,116 @@
+{
+  "profiles": {
+    "Ap Kiri": {
+      "rows": 3781,
+      "magnitude_stats": {
+        "mean": 14.431019231666367,
+        "std": 5.895708156936389,
+        "min": 1.0474254150057654,
+        "max": 33.96551633642569
+      },
+      "clipped_samples": {
+        "X": 180,
+        "Y": 593,
+        "Z": 83
+      },
+      "total_clipped_pct": 7.55
+    },
+    "Diam": {
+      "rows": 2793,
+      "magnitude_stats": {
+        "mean": 9.83651060051428,
+        "std": 1.715206780189779,
+        "min": 4.7190465138627316,
+        "max": 23.296029704651392
+      },
+      "clipped_samples": {
+        "X": 0,
+        "Y": 2,
+        "Z": 0
+      },
+      "total_clipped_pct": 0.02
+    },
+    "Doylo Kiri": {
+      "rows": 3781,
+      "magnitude_stats": {
+        "mean": 15.838707566593586,
+        "std": 6.325214385516164,
+        "min": 1.3764083696345355,
+        "max": 33.94819582835
+      },
+      "clipped_samples": {
+        "X": 197,
+        "Y": 735,
+        "Z": 235
+      },
+      "total_clipped_pct": 10.29
+    },
+    "Ap Kanan": {
+      "rows": 4000,
+      "magnitude_stats": {
+        "mean": 15.183397206356407,
+        "std": 5.98922457224244,
+        "min": 1.1141813137905339,
+        "max": 33.94819582835
+      },
+      "clipped_samples": {
+        "X": 238,
+        "Y": 687,
+        "Z": 104
+      },
+      "total_clipped_pct": 8.58
+    },
+    "Doylo Kanan": {
+      "rows": 4000,
+      "magnitude_stats": {
+        "mean": 15.143324421618294,
+        "std": 6.289064470936745,
+        "min": 1.2570202862324857,
+        "max": 33.94819582835
+      },
+      "clipped_samples": {
+        "X": 202,
+        "Y": 619,
+        "Z": 158
+      },
+      "total_clipped_pct": 8.16
+    }
+  },
+  "segmentation": {
+    "Ap Kiri": {
+      "n_peaks": 32,
+      "threshold": 22.371311529997023,
+      "peak_regularity_cv": 0.438,
+      "peak_height_cv": 0.097,
+      "segmentation_quality": "CLEAN"
+    },
+    "Diam": {
+      "n_peaks": 25,
+      "threshold": 12.03610759316117,
+      "peak_regularity_cv": 0.458,
+      "peak_height_cv": 0.174,
+      "segmentation_quality": "CLEAN"
+    },
+    "Doylo Kiri": {
+      "n_peaks": 45,
+      "threshold": 23.932152414233727,
+      "peak_regularity_cv": 0.204,
+      "peak_height_cv": 0.094,
+      "segmentation_quality": "CLEAN"
+    },
+    "Ap Kanan": {
+      "n_peaks": 40,
+      "threshold": 23.039584616871156,
+      "peak_regularity_cv": 0.154,
+      "peak_height_cv": 0.134,
+      "segmentation_quality": "CLEAN"
+    },
+    "Doylo Kanan": {
+      "n_peaks": 42,
+      "threshold": 23.247622679516624,
+      "peak_regularity_cv": 0.185,
+      "peak_height_cv": 0.095,
+      "segmentation_quality": "CLEAN"
+    }
+  }
+}

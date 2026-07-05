@@ -1,0 +1,204 @@
+{
+  "Front Kick": [
+    {
+      "seg": 1,
+      "time": 7.0,
+      "dur": 0.66,
+      "pred": "Idle",
+      "conf": 0.817
+    },
+    {
+      "seg": 2,
+      "time": 7.5,
+      "dur": 0.87,
+      "pred": "Idle",
+      "conf": 0.576
+    },
+    {
+      "seg": 3,
+      "time": 10.6,
+      "dur": 0.69,
+      "pred": "Idle",
+      "conf": 0.61
+    },
+    {
+      "seg": 4,
+      "time": 13.3,
+      "dur": 1.2,
+      "pred": "Idle",
+      "conf": 0.586
+    },
+    {
+      "seg": 5,
+      "time": 15.8,
+      "dur": 0.76,
+      "pred": "Idle",
+      "conf": 0.564
+    },
+    {
+      "seg": 6,
+      "time": 17.9,
+      "dur": 1.13,
+      "pred": "Idle",
+      "conf": 0.563
+    },
+    {
+      "seg": 7,
+      "time": 20.0,
+      "dur": 1.18,
+      "pred": "Idle",
+      "conf": 0.754
+    },
+    {
+      "seg": 8,
+      "time": 24.1,
+      "dur": 1.21,
+      "pred": "Idle",
+      "conf": 0.59
+    },
+    {
+      "seg": 9,
+      "time": 26.6,
+      "dur": 1.11,
+      "pred": "Idle",
+      "conf": 0.711
+    },
+    {
+      "seg": 10,
+      "time": 29.4,
+      "dur": 1.22,
+      "pred": "Idle",
+      "conf": 0.588
+    },
+    {
+      "seg": 11,
+      "time": 32.2,
+      "dur": 0.79,
+      "pred": "Idle",
+      "conf": 0.702
+    },
+    {
+      "seg": 12,
+      "time": 34.5,
+      "dur": 1.05,
+      "pred": "Idle",
+      "conf": 0.728
+    },
+    {
+      "seg": 13,
+      "time": 36.8,
+      "dur": 1.21,
+      "pred": "Idle",
+      "conf": 0.662
+    }
+  ],
+  "Roundhouse": [
+    {
+      "seg": 1,
+      "time": 7.7,
+      "dur": 0.51,
+      "pred": "Idle",
+      "conf": 0.537
+    },
+    {
+      "seg": 2,
+      "time": 17.5,
+      "dur": 0.64,
+      "pred": "Idle",
+      "conf": 0.714
+    },
+    {
+      "seg": 3,
+      "time": 20.0,
+      "dur": 0.56,
+      "pred": "Idle",
+      "conf": 0.908
+    },
+    {
+      "seg": 4,
+      "time": 22.3,
+      "dur": 1.02,
+      "pred": "Idle",
+      "conf": 0.64
+    },
+    {
+      "seg": 5,
+      "time": 24.7,
+      "dur": 0.88,
+      "pred": "Idle",
+      "conf": 0.788
+    },
+    {
+      "seg": 6,
+      "time": 29.4,
+      "dur": 0.52,
+      "pred": "Idle",
+      "conf": 0.761
+    },
+    {
+      "seg": 7,
+      "time": 35.1,
+      "dur": 0.58,
+      "pred": "Idle",
+      "conf": 0.836
+    },
+    {
+      "seg": 8,
+      "time": 37.6,
+      "dur": 0.61,
+      "pred": "Idle",
+      "conf": 0.801
+    }
+  ],
+  "Standing": [
+    {
+      "seg": 1,
+      "time": 6.4,
+      "dur": 0.38,
+      "pred": "Idle",
+      "conf": 0.779
+    },
+    {
+      "seg": 2,
+      "time": 6.9,
+      "dur": 0.33,
+      "pred": "Idle",
+      "conf": 0.508
+    },
+    {
+      "seg": 3,
+      "time": 10.4,
+      "dur": 0.37,
+      "pred": "Idle",
+      "conf": 0.705
+    },
+    {
+      "seg": 4,
+      "time": 12.0,
+      "dur": 0.39,
+      "pred": "Idle",
+      "conf": 0.741
+    },
+    {
+      "seg": 5,
+      "time": 12.6,
+      "dur": 0.36,
+      "pred": "Idle",
+      "conf": 0.82
+    },
+    {
+      "seg": 6,
+      "time": 13.9,
+      "dur": 0.45,
+      "pred": "Idle",
+      "conf": 0.898
+    },
+    {
+      "seg": 7,
+      "time": 19.9,
+      "dur": 0.3,
+      "pred": "Idle",
+      "conf": 0.817
+    }
+  ]
+}
