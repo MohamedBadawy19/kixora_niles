@@ -115,9 +115,14 @@ footer{padding:10px 24px;text-align:center;font-size:.75rem;color:var(--muted);b
       <span class="tag tag-idle" id="ptag1">idle</span>
     </div>
     <div style="font-size:.75rem;color:var(--muted);font-weight:600">ESP32 SOCK (BLE)</div>
-    <div class="conn-row">
-      <button class="btn btn-scan" id="blescan1" onclick="bleConnectPlayer(1)" style="padding:7px 14px;font-size:.8rem">🔵 Connect via BLE</button>
-      <button class="btn btn-stop"  id="blecbtn1" onclick="bleDisconnectPlayer(1)" style="padding:7px 14px;font-size:.8rem;display:none">Disconnect</button>
+    <div class="conn-row" style="flex-wrap:wrap;gap:8px">
+      <button class="btn btn-scan" id="blescan1" onclick="bleConnectPlayer(1)" style="padding:7px 14px;font-size:.8rem">
+        🔵 Connect BLE
+      </button>
+      <button class="btn btn-stop" id="blecbtn1" onclick="bleDisconnectPlayer(1)" style="padding:7px 14px;font-size:.8rem;display:none">Disconnect</button>
+    </div>
+    <div style="font-size:.7rem;color:var(--muted);margin-top:4px">
+      Make sure the sock is <strong style="color:var(--text)">powered on</strong> &amp; Windows Bluetooth is <strong style="color:var(--text)">ON</strong>
     </div>
     <div style="font-size:.75rem;color:var(--muted);font-weight:600;margin-top:10px">PHONE IMU</div>
     <div style="font-size:.8rem">Open on phone: <a id="phonelink1" style="color:var(--accent)" href="#" target="_blank"></a></div>
@@ -151,9 +156,14 @@ footer{padding:10px 24px;text-align:center;font-size:.75rem;color:var(--muted);b
       <span class="tag tag-idle" id="ptag2">idle</span>
     </div>
     <div style="font-size:.75rem;color:var(--muted);font-weight:600">ESP32 SOCK (BLE)</div>
-    <div class="conn-row">
-      <button class="btn btn-scan" id="blescan2" onclick="bleConnectPlayer(2)" style="padding:7px 14px;font-size:.8rem">🔵 Connect via BLE</button>
-      <button class="btn btn-stop"  id="blecbtn2" onclick="bleDisconnectPlayer(2)" style="padding:7px 14px;font-size:.8rem;display:none">Disconnect</button>
+    <div class="conn-row" style="flex-wrap:wrap;gap:8px">
+      <button class="btn btn-scan" id="blescan2" onclick="bleConnectPlayer(2)" style="padding:7px 14px;font-size:.8rem">
+        🔵 Connect BLE
+      </button>
+      <button class="btn btn-stop" id="blecbtn2" onclick="bleDisconnectPlayer(2)" style="padding:7px 14px;font-size:.8rem;display:none">Disconnect</button>
+    </div>
+    <div style="font-size:.7rem;color:var(--muted);margin-top:4px">
+      Make sure the sock is <strong style="color:var(--text)">powered on</strong> &amp; Windows Bluetooth is <strong style="color:var(--text)">ON</strong>
     </div>
     <div style="font-size:.75rem;color:var(--muted);font-weight:600;margin-top:10px">PHONE IMU</div>
     <div style="font-size:.8rem">Open on phone: <a id="phonelink2" style="color:var(--accent)" href="#" target="_blank"></a></div>
@@ -240,78 +250,119 @@ function handleMsg(m){
   else if(m.type==='session_stopped'){ onSessionStopped(m.summary); }
 }
 
+// Guard: track which players have an active requestDevice() in-flight
+const bleConnecting = { 1: false, 2: false };
+
 async function bleConnectPlayer(pid) {
-  // ── Browser / HTTPS guard (mirrors reference bluetooth.js) ──
+  // ── Prevent double-click spam ──────────────────────────────
+  if (bleConnecting[pid]) return;
+
+  // ── Browser / HTTPS guard ────────────────────────────────
   if (!navigator.bluetooth) {
     const isHttps     = location.protocol === 'https:';
     const isLocalhost = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
     if (!isHttps && !isLocalhost) {
-      toast('HTTPS required for Bluetooth on mobile. Open https://' + location.hostname + ':8000 and accept the cert.', 'err');
+      toast('HTTPS required for Bluetooth on mobile. Use https://' + location.hostname + ':8000', 'err');
       return;
     }
-    toast('Web Bluetooth not supported — use Chrome on Android/desktop', 'err');
+    toast('Web Bluetooth not supported — use Chrome (not Edge/Firefox)', 'err');
     return;
   }
 
+  // Lock button
+  bleConnecting[pid] = true;
+  const scanBtn = document.getElementById('blescan' + pid);
+  scanBtn.disabled    = true;
+  scanBtn.textContent = '⏳ Searching…';
   setBLEStatus(pid, 'connecting');
+
+  let device = null;
+
+  // ── Step 1: Try filtered scan (namePrefix:'Kixora') ────────────
   try {
-    // ── Open native OS BLE picker ─────────────────────────────
-    const device = await navigator.bluetooth.requestDevice({
+    device = await navigator.bluetooth.requestDevice({
       filters:          [{ namePrefix: 'Kixora' }],
       optionalServices: [BLE_SVC_UUID],
     });
-
-    const st  = bleState[pid];
-    st.device = device;
-
-    // ── Handle unexpected GATT drop ───────────────────────────
-    device.addEventListener('gattserverdisconnected', () => {
-      console.warn(`[BLE P${pid}] GATT disconnected`);
-      setBLEStatus(pid, 'disconnected');
-      showConnectBtn(pid);
-      // Tell server the device dropped
-      if (st.relayWs && st.relayWs.readyState === WebSocket.OPEN) {
-        st.relayWs.send(JSON.stringify({ ctrl: 'disconnected' }));
-        st.relayWs.close();
+  } catch (e1) {
+    if (e1.name === 'NotFoundError') {
+      // ── Step 2: Fall back — show ALL BLE devices so user can pick manually ──
+      toast('No “Kixora” device found. Opening full device list — pick your sock manually…', 'info');
+      try {
+        device = await navigator.bluetooth.requestDevice({
+          acceptAllDevices: true,
+          optionalServices: [BLE_SVC_UUID],
+        });
+      } catch (e2) {
+        // User cancelled the fallback picker too, or Bluetooth is truly off
+        const msg = e2.name === 'NotFoundError'
+          ? 'No device selected. Make sure Windows Bluetooth is ON and the sock is powered.'
+          : ('BLE error: ' + e2.message);
+        toast('P' + pid + ': ' + msg, 'err');
+        bleConnecting[pid] = false;
+        scanBtn.disabled    = false;
+        scanBtn.textContent = '🔵 Connect BLE';
+        setBLEStatus(pid, 'disconnected');
+        return;
       }
-      st.char    = null;
-      st.relayWs = null;
-      toast(`P${pid} sock disconnected`, 'err');
-    });
+    } else {
+      // Some other error (SecurityError, etc.)
+      toast('P' + pid + ' BLE error: ' + e1.message, 'err');
+      bleConnecting[pid] = false;
+      scanBtn.disabled    = false;
+      scanBtn.textContent = '🔵 Connect BLE';
+      setBLEStatus(pid, 'disconnected');
+      return;
+    }
+  }
 
-    // ── GATT connect → subscribe ──────────────────────────────
+  // ── Device chosen — now connect GATT ────────────────────────────
+  const st  = bleState[pid];
+  st.device = device;
+
+  // Handle unexpected GATT drop
+  device.addEventListener('gattserverdisconnected', () => {
+    console.warn(`[BLE P${pid}] GATT disconnected`);
+    setBLEStatus(pid, 'disconnected');
+    showConnectBtn(pid);
+    if (st.relayWs && st.relayWs.readyState === WebSocket.OPEN) {
+      st.relayWs.send(JSON.stringify({ ctrl: 'disconnected' }));
+      st.relayWs.close();
+    }
+    st.char    = null;
+    st.relayWs = null;
+    toast(`P${pid} sock disconnected`, 'err');
+  });
+
+  try {
+    scanBtn.textContent = '⏳ Connecting…';
     const server  = await device.gatt.connect();
     const service = await server.getPrimaryService(BLE_SVC_UUID);
     st.char        = await service.getCharacteristic(BLE_CHAR_UUID);
     await st.char.startNotifications();
     st.char.addEventListener('characteristicvaluechanged', (ev) => handleBLEPacket(pid, ev));
 
-    // ── Open relay WebSocket to server ────────────────────────
+    // Open relay WebSocket so server can record packets in sessions
     const wsProto  = location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const relayUrl = `${wsProto}//${location.hostname}:8000/ws/ble/${pid}`;
-    st.relayWs = new WebSocket(relayUrl);
+    st.relayWs = new WebSocket(`${wsProto}//${location.hostname}:8000/ws/ble/${pid}`);
     st.relayWs.onopen = () => {
-      // Tell server which device connected
       st.relayWs.send(JSON.stringify({ ctrl: 'connected', name: device.name || `Kixora-${pid}` }));
-      console.log(`[BLE P${pid}] relay WS open → ctrl:connected sent`);
     };
     st.relayWs.onerror = (e) => console.warn(`[BLE P${pid}] relay WS error`, e);
     st.relayWs.onclose = () => console.log(`[BLE P${pid}] relay WS closed`);
 
     setBLEStatus(pid, 'connected', device.name);
     showDisconnectBtn(pid);
-    toast(`Player ${pid} sock connected — ${device.name || 'Kixora'}`, 'info');
+    toast(`Player ${pid} connected — ${device.name || 'Kixora sock'}`, 'info');
 
   } catch (err) {
-    console.error(`[BLE P${pid}] connect error:`, err);
-    if (err.name === 'NotFoundError') {
-      toast(`P${pid}: picker cancelled`, 'info');
-    } else {
-      toast(`P${pid} BLE error: ${err.message}`, 'err');
-    }
+    console.error(`[BLE P${pid}] GATT error:`, err);
+    toast(`P${pid} GATT error: ${err.message}`, 'err');
     setBLEStatus(pid, 'disconnected');
-    showConnectBtn(pid);
+    showConnectBtn(pid); // re-enables button inside
   }
+
+  bleConnecting[pid] = false;
 }
 
 /** Receive raw BLE notify packet, update UI, relay to server. */
@@ -356,12 +407,17 @@ async function bleDisconnectPlayer(pid) {
 }
 
 function showConnectBtn(pid) {
-  document.getElementById('blescan' + pid).style.display = '';
+  const btn = document.getElementById('blescan' + pid);
+  btn.style.display = '';
+  btn.disabled      = false;
+  btn.textContent   = '🔵 Connect BLE';
   document.getElementById('blecbtn' + pid).style.display = 'none';
 }
 function showDisconnectBtn(pid) {
   document.getElementById('blescan' + pid).style.display = 'none';
-  document.getElementById('blecbtn' + pid).style.display = '';
+  const btn = document.getElementById('blecbtn' + pid);
+  btn.style.display = '';
+  btn.disabled      = false;
 }
 function setBLEStatus(pid, status, name) {
   const tag = document.getElementById('ptag' + pid);
