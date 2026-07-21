@@ -3,12 +3,18 @@ main.py — Kixora FastAPI backend
 WebSocket endpoints:
   /ws/imu/{player_id}   — phone streams IMU samples here
   /ws/ui                — browser UI receives real-time events here
+  /ws/ble/{player_id}   — browser relays Web Bluetooth packets here (client-side BLE)
 
 REST endpoints:
   POST /session/start  POST /session/stop  GET /session/status
   POST /ble/scan  POST /ble/connect  POST /ble/disconnect
   POST /kick/manual
   GET  /sessions  GET /api/info
+
+NOTE: BLE is now handled client-side via the Web Bluetooth API in index.html.
+      The browser scans/connects directly to the ESP32 sock and forwards packets
+      to this server over /ws/ble/{player_id}.  Server-side bleak endpoints are
+      kept for backwards-compat but are no longer called by the default UI.
 """
 import asyncio
 import json
@@ -269,6 +275,96 @@ async def ws_ui(websocket: WebSocket):
     finally:
         if websocket in ui_clients:
             ui_clients.remove(websocket)
+
+
+# ═══════════════════════════════════════════════════════════════
+# WebSocket: BLE packet relay from browser (Web Bluetooth)
+# ═══════════════════════════════════════════════════════════════
+@app.websocket("/ws/ble/{player_id}")
+async def ws_ble(websocket: WebSocket, player_id: int):
+    """
+    The browser connects to the ESP32 via Web Bluetooth API, receives JSON
+    notify packets, then forwards them here over this WebSocket.
+    Packet format (from ESP32): {"f":1420,"d":84,"b":45,"i":890,"h":12}
+      f = FSR peak force (N)
+      d = event duration (ms)
+      b = ball piezo ADC (0-4095)
+      i = instep piezo ADC (0-4095)
+      h = heel piezo ADC (0-4095)
+    Special control messages:
+      {"ctrl":"connected",  "name":"Kixora-L"}
+      {"ctrl":"disconnected"}
+    """
+    if player_id not in (1, 2):
+        await websocket.close(code=4000)
+        return
+    await websocket.accept()
+    log.info(f"[P{player_id}] Browser BLE relay WebSocket connected")
+
+    # Mirror connected status into ble_mgr so /session/status stays accurate
+    if ble_mgr and player_id in ble_mgr.devices:
+        ble_mgr.devices[player_id].connected = False  # reset until we get ctrl:connected
+
+    try:
+        async for raw in websocket.iter_text():
+            try:
+                pkt = json.loads(raw)
+
+                # ── Control messages ──────────────────────────────────
+                ctrl = pkt.get("ctrl")
+                if ctrl == "connected":
+                    device_name = pkt.get("name", f"Kixora-{player_id}")
+                    log.info(f"[P{player_id}] BLE relay: device connected — {device_name}")
+                    if ble_mgr and player_id in ble_mgr.devices:
+                        ble_mgr.devices[player_id].connected = True
+                        ble_mgr.devices[player_id].address   = device_name
+                        ble_mgr.devices[player_id].error     = None
+                    await _broadcast_ui({
+                        "type":   "ble_status",
+                        "player": player_id,
+                        "status": "connected",
+                        "extra":  {"name": device_name},
+                        "ts":     round(time.time() * 1000),
+                    })
+                    continue
+
+                if ctrl == "disconnected":
+                    log.info(f"[P{player_id}] BLE relay: device disconnected")
+                    if ble_mgr and player_id in ble_mgr.devices:
+                        ble_mgr.devices[player_id].connected = False
+                    await _broadcast_ui({
+                        "type":   "ble_status",
+                        "player": player_id,
+                        "status": "disconnected",
+                        "extra":  {},
+                        "ts":     round(time.time() * 1000),
+                    })
+                    continue
+
+                # ── Sensor packet ─────────────────────────────────────
+                if ble_mgr and player_id in ble_mgr.devices:
+                    dev = ble_mgr.devices[player_id]
+                    dev.last_packet   = pkt
+                    dev.packet_count += 1
+
+                await _on_ble_packet(player_id, pkt)
+
+            except json.JSONDecodeError:
+                log.warning(f"[P{player_id}] BLE relay: bad JSON — {raw[:80]}")
+            except Exception as e:
+                log.error(f"[P{player_id}] BLE relay error: {e}")
+
+    except WebSocketDisconnect:
+        log.info(f"[P{player_id}] Browser BLE relay WebSocket closed")
+        if ble_mgr and player_id in ble_mgr.devices:
+            ble_mgr.devices[player_id].connected = False
+        await _broadcast_ui({
+            "type":   "ble_status",
+            "player": player_id,
+            "status": "disconnected",
+            "extra":  {"relay_closed": True},
+            "ts":     round(time.time() * 1000),
+        })
 
 
 # ═══════════════════════════════════════════════════════════════

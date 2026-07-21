@@ -116,12 +116,10 @@ footer{padding:10px 24px;text-align:center;font-size:.75rem;color:var(--muted);b
     </div>
     <div style="font-size:.75rem;color:var(--muted);font-weight:600">ESP32 SOCK (BLE)</div>
     <div class="conn-row">
-      <select id="blesel1"><option value="">— select device —</option></select>
-      <button class="btn btn-scan" onclick="scanBLE()" style="padding:7px 14px;font-size:.8rem">Scan</button>
-      <button class="btn btn-start" id="blecbtn1" onclick="connectBLE(1)" style="padding:7px 14px;font-size:.8rem">Connect</button>
+      <button class="btn btn-scan" id="blescan1" onclick="bleConnectPlayer(1)" style="padding:7px 14px;font-size:.8rem">🔵 Connect via BLE</button>
+      <button class="btn btn-stop"  id="blecbtn1" onclick="bleDisconnectPlayer(1)" style="padding:7px 14px;font-size:.8rem;display:none">Disconnect</button>
     </div>
-    <div class="scan-results" id="scanRes1"></div>
-    <div style="font-size:.75rem;color:var(--muted);font-weight:600">PHONE IMU</div>
+    <div style="font-size:.75rem;color:var(--muted);font-weight:600;margin-top:10px">PHONE IMU</div>
     <div style="font-size:.8rem">Open on phone: <a id="phonelink1" style="color:var(--accent)" href="#" target="_blank"></a></div>
     <span class="tag tag-idle" id="phonetag1" style="width:fit-content">not connected</span>
     <div class="imu-bar" id="imu1">
@@ -146,7 +144,6 @@ footer{padding:10px 24px;text-align:center;font-size:.75rem;color:var(--muted);b
     <div class="kick-log" id="klog1"></div>
   </div>
 
-  <!-- Player 2 -->
   <div class="player-card" id="card2">
     <div class="player-header">
       <div class="player-num" style="background:linear-gradient(135deg,#f472b6,#fb923c)">2</div>
@@ -155,11 +152,10 @@ footer{padding:10px 24px;text-align:center;font-size:.75rem;color:var(--muted);b
     </div>
     <div style="font-size:.75rem;color:var(--muted);font-weight:600">ESP32 SOCK (BLE)</div>
     <div class="conn-row">
-      <select id="blesel2"><option value="">— select device —</option></select>
-      <button class="btn btn-scan" onclick="scanBLE()" style="padding:7px 14px;font-size:.8rem">Scan</button>
-      <button class="btn btn-start" id="blecbtn2" onclick="connectBLE(2)" style="padding:7px 14px;font-size:.8rem">Connect</button>
+      <button class="btn btn-scan" id="blescan2" onclick="bleConnectPlayer(2)" style="padding:7px 14px;font-size:.8rem">🔵 Connect via BLE</button>
+      <button class="btn btn-stop"  id="blecbtn2" onclick="bleDisconnectPlayer(2)" style="padding:7px 14px;font-size:.8rem;display:none">Disconnect</button>
     </div>
-    <div style="font-size:.75rem;color:var(--muted);font-weight:600">PHONE IMU</div>
+    <div style="font-size:.75rem;color:var(--muted);font-weight:600;margin-top:10px">PHONE IMU</div>
     <div style="font-size:.8rem">Open on phone: <a id="phonelink2" style="color:var(--accent)" href="#" target="_blank"></a></div>
     <span class="tag tag-idle" id="phonetag2" style="width:fit-content">not connected</span>
     <div class="imu-bar" id="imu2">
@@ -204,9 +200,15 @@ footer{padding:10px 24px;text-align:center;font-size:.75rem;color:var(--muted);b
 <script>
 const API = 'http://' + location.hostname + ':8000';
 let ws, sessionActive=false, elapsedTimer, elapsedStart=0;
-let kickCounts={1:{},2:{}}, bleDevices=[];
+let kickCounts={1:{},2:{}};
 
-// ── WebSocket ─────────────────────────────────────────────────
+const BLE_SVC_UUID  = localStorage.getItem('kixora_ble_service') || '4fafc201-1fb5-459e-8fcc-c5c9c331914b';
+const BLE_CHAR_UUID = localStorage.getItem('kixora_ble_char')    || 'beb5483e-36e1-4688-b7f5-ea07361b26a8';
+const bleState = {
+  1: { device: null, char: null, relayWs: null },
+  2: { device: null, char: null, relayWs: null },
+};
+
 function connectWS(){
   ws = new WebSocket('ws://' + location.hostname + ':8000/ws/ui');
   ws.onopen=()=>{ setWS(true); };
@@ -224,10 +226,12 @@ function handleMsg(m){
     document.getElementById('modelLabel').textContent=m.model_available?'Model OK':'IMU-only';
     if(m.session) restoreSession(m.session);
     (m.phones_connected||[]).forEach(p=>setPhoneTag(p,true));
-    updateBLEStatus(m.ble_status);
+    // Restore BLE status from server state on reconnect
+    if(m.ble_status) updateBLEStatusFromServer(m.ble_status);
   }
+  // ble_status / ble_packet come from server-side bleak OR from the relay WS endpoint
+  else if(m.type==='ble_status'){ onBLEStatusFromServer(m.player,m.status,m.extra||{}); }
   else if(m.type==='ble_packet'){ onBLEPacket(m.player,m.data); }
-  else if(m.type==='ble_status'){ onBLEStatus(m.player,m.status,m.extra); }
   else if(m.type==='phone_connected'){ setPhoneTag(m.player,true); }
   else if(m.type==='phone_disconnected'){ setPhoneTag(m.player,false); }
   else if(m.type==='imu_sample'){ onIMU(m.player,m.x,m.y,m.z,m.mag); }
@@ -236,41 +240,164 @@ function handleMsg(m){
   else if(m.type==='session_stopped'){ onSessionStopped(m.summary); }
 }
 
-// ── BLE ──────────────────────────────────────────────────────
-async function scanBLE(){
-  toast('Scanning for Kixora BLE devices…','info');
-  const r=await api('POST','/ble/scan');
-  bleDevices=r.devices||[];
-  if(!bleDevices.length){ toast('No devices found — BLE optional, IMU works alone','info'); return; }
-  [1,2].forEach(pid=>{
-    const sel=document.getElementById('blesel'+pid);
-    sel.innerHTML='<option value="">— select device —</option>';
-    bleDevices.forEach(d=>{ const o=document.createElement('option'); o.value=d.address; o.textContent=d.name+' '+d.address+' RSSI:'+d.rssi; sel.appendChild(o); });
-  });
-  toast('Found '+bleDevices.length+' device(s)','info');
-}
-async function connectBLE(pid){
-  const addr=document.getElementById('blesel'+pid).value;
-  if(!addr){ toast('Select a device first','err'); return; }
-  await api('POST','/ble/connect',{player_id:pid,address:addr});
-}
-async function disconnectBLE(pid){
-  await api('POST','/ble/disconnect',{player_id:pid});
-  document.getElementById('blecbtn'+pid).textContent='Connect';
-  document.getElementById('blecbtn'+pid).onclick=()=>connectBLE(pid);
-}
-function onBLEStatus(pid,status,extra){
-  const tag=document.getElementById('ptag'+pid);
-  const btn=document.getElementById('blecbtn'+pid);
-  if(status==='connected'){ tag.className='tag tag-ok'; tag.textContent='BLE ✓'; btn.textContent='Disconnect'; btn.onclick=()=>disconnectBLE(pid); toast('Player '+pid+' sock connected','info'); }
-  else if(status==='disconnected'){ tag.className='tag tag-idle'; tag.textContent='idle'; btn.textContent='Connect'; btn.onclick=()=>connectBLE(pid); }
-  else if(status==='error'){ tag.className='tag tag-err'; tag.textContent='error'; toast('P'+pid+' BLE: '+(extra.error||'error'),'err'); }
-  else if(status==='connecting'){ tag.className='tag tag-warn'; tag.textContent='connecting…'; }
-}
-function updateBLEStatus(s){ if(!s) return; Object.entries(s).forEach(([pid,v])=>onBLEStatus(parseInt(pid),v.connected?'connected':'disconnected',{})); }
-function onBLEPacket(pid,pkt){ document.getElementById('fsr'+pid).textContent=pkt.f??'—'; document.getElementById('ball'+pid).textContent=pkt.b??'—'; document.getElementById('inst'+pid).textContent=pkt.i??'—'; }
+async function bleConnectPlayer(pid) {
+  // ── Browser / HTTPS guard (mirrors reference bluetooth.js) ──
+  if (!navigator.bluetooth) {
+    const isHttps     = location.protocol === 'https:';
+    const isLocalhost = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+    if (!isHttps && !isLocalhost) {
+      toast('HTTPS required for Bluetooth on mobile. Open https://' + location.hostname + ':8000 and accept the cert.', 'err');
+      return;
+    }
+    toast('Web Bluetooth not supported — use Chrome on Android/desktop', 'err');
+    return;
+  }
 
-// ── IMU ──────────────────────────────────────────────────────
+  setBLEStatus(pid, 'connecting');
+  try {
+    // ── Open native OS BLE picker ─────────────────────────────
+    const device = await navigator.bluetooth.requestDevice({
+      filters:          [{ namePrefix: 'Kixora' }],
+      optionalServices: [BLE_SVC_UUID],
+    });
+
+    const st  = bleState[pid];
+    st.device = device;
+
+    // ── Handle unexpected GATT drop ───────────────────────────
+    device.addEventListener('gattserverdisconnected', () => {
+      console.warn(`[BLE P${pid}] GATT disconnected`);
+      setBLEStatus(pid, 'disconnected');
+      showConnectBtn(pid);
+      // Tell server the device dropped
+      if (st.relayWs && st.relayWs.readyState === WebSocket.OPEN) {
+        st.relayWs.send(JSON.stringify({ ctrl: 'disconnected' }));
+        st.relayWs.close();
+      }
+      st.char    = null;
+      st.relayWs = null;
+      toast(`P${pid} sock disconnected`, 'err');
+    });
+
+    // ── GATT connect → subscribe ──────────────────────────────
+    const server  = await device.gatt.connect();
+    const service = await server.getPrimaryService(BLE_SVC_UUID);
+    st.char        = await service.getCharacteristic(BLE_CHAR_UUID);
+    await st.char.startNotifications();
+    st.char.addEventListener('characteristicvaluechanged', (ev) => handleBLEPacket(pid, ev));
+
+    // ── Open relay WebSocket to server ────────────────────────
+    const wsProto  = location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const relayUrl = `${wsProto}//${location.hostname}:8000/ws/ble/${pid}`;
+    st.relayWs = new WebSocket(relayUrl);
+    st.relayWs.onopen = () => {
+      // Tell server which device connected
+      st.relayWs.send(JSON.stringify({ ctrl: 'connected', name: device.name || `Kixora-${pid}` }));
+      console.log(`[BLE P${pid}] relay WS open → ctrl:connected sent`);
+    };
+    st.relayWs.onerror = (e) => console.warn(`[BLE P${pid}] relay WS error`, e);
+    st.relayWs.onclose = () => console.log(`[BLE P${pid}] relay WS closed`);
+
+    setBLEStatus(pid, 'connected', device.name);
+    showDisconnectBtn(pid);
+    toast(`Player ${pid} sock connected — ${device.name || 'Kixora'}`, 'info');
+
+  } catch (err) {
+    console.error(`[BLE P${pid}] connect error:`, err);
+    if (err.name === 'NotFoundError') {
+      toast(`P${pid}: picker cancelled`, 'info');
+    } else {
+      toast(`P${pid} BLE error: ${err.message}`, 'err');
+    }
+    setBLEStatus(pid, 'disconnected');
+    showConnectBtn(pid);
+  }
+}
+
+/** Receive raw BLE notify packet, update UI, relay to server. */
+function handleBLEPacket(pid, event) {
+  try {
+    const raw = new TextDecoder().decode(event.target.value);
+    const pkt = JSON.parse(raw);
+    // Update sensor displays immediately (zero round-trip latency)
+    onBLEPacket(pid, pkt);
+    // Relay to server for session recording
+    const relay = bleState[pid].relayWs;
+    if (relay && relay.readyState === WebSocket.OPEN) {
+      relay.send(raw);
+    }
+  } catch (e) {
+    console.warn(`[BLE P${pid}] packet parse error:`, e.message);
+  }
+}
+
+/** Stop notifications, disconnect GATT cleanly. */
+async function bleDisconnectPlayer(pid) {
+  const st = bleState[pid];
+  // Stop BLE notifications first
+  if (st.char) {
+    try { await st.char.stopNotifications(); } catch (_) {}
+    st.char = null;
+  }
+  // Disconnect GATT (fires gattserverdisconnected → handler above)
+  if (st.device?.gatt?.connected) {
+    st.device.gatt.disconnect();
+  } else {
+    // Already gone — clean up relay manually
+    if (st.relayWs && st.relayWs.readyState === WebSocket.OPEN) {
+      st.relayWs.send(JSON.stringify({ ctrl: 'disconnected' }));
+      st.relayWs.close();
+    }
+    st.relayWs = null;
+    setBLEStatus(pid, 'disconnected');
+    showConnectBtn(pid);
+  }
+  st.device = null;
+}
+
+function showConnectBtn(pid) {
+  document.getElementById('blescan' + pid).style.display = '';
+  document.getElementById('blecbtn' + pid).style.display = 'none';
+}
+function showDisconnectBtn(pid) {
+  document.getElementById('blescan' + pid).style.display = 'none';
+  document.getElementById('blecbtn' + pid).style.display = '';
+}
+function setBLEStatus(pid, status, name) {
+  const tag = document.getElementById('ptag' + pid);
+  if (status === 'connected') {
+    tag.className   = 'tag tag-ok';
+    tag.textContent = 'BLE ✓' + (name ? ' ' + name : '');
+  } else if (status === 'connecting') {
+    tag.className   = 'tag tag-warn';
+    tag.textContent = 'connecting…';
+  } else {
+    tag.className   = 'tag tag-idle';
+    tag.textContent = 'idle';
+  }
+}
+// Called when the server (via /ws/ui) broadcasts ble_status (server-side bleak path or relay echo)
+function onBLEStatusFromServer(pid, status, extra) {
+  // Only update UI if we don't have an active client-side connection
+  // (client-side state is authoritative when bleState[pid].device is set)
+  if (!bleState[pid].device) {
+    setBLEStatus(pid, status);
+    if (status === 'connected')   showDisconnectBtn(pid);
+    if (status === 'disconnected') showConnectBtn(pid);
+    if (status === 'error') toast('P' + pid + ' BLE: ' + (extra.error || 'error'), 'err');
+  }
+}
+function updateBLEStatusFromServer(s) {
+  if (!s) return;
+  Object.entries(s).forEach(([pid, v]) => onBLEStatusFromServer(parseInt(pid), v.connected ? 'connected' : 'disconnected', {}));
+}
+function onBLEPacket(pid, pkt) {
+  // pkt format: {f, d, b, i, h}
+  document.getElementById('fsr'  + pid).textContent = pkt.f ?? '—';
+  document.getElementById('ball' + pid).textContent = pkt.b ?? '—';
+  document.getElementById('inst' + pid).textContent = pkt.i ?? '—';
+}
+
 function onIMU(pid,x,y,z,mag){
   document.getElementById('ix'+pid).textContent=x.toFixed(2);
   document.getElementById('iy'+pid).textContent=y.toFixed(2);
@@ -282,25 +409,27 @@ function setPhoneTag(pid,ok){
   el.className='tag '+(ok?'tag-ok':'tag-idle');
   el.textContent=ok?'phone streaming ✓':'not connected';
 }
-
-// ── Kicks ────────────────────────────────────────────────────
 function onKick(pid,kick,ts){
-  const t=kick.type; const conf=kick.confidence; const src=kick.source||'auto';
-  const icon=t.includes('Ap')?'🦵':t.includes('Dolyo')?'🌀':'⚡';
-  const cls=t.includes('Ap')?'kick-ap':t.includes('Dolyo')?'kick-dolyo':'info';
-  toast(icon+' P'+pid+': '+t+(conf<1?' ('+Math.round(conf*100)+'%)':''),cls);
-  const lg=document.getElementById('klog'+pid);
-  const div=document.createElement('div'); div.className='kick-entry';
-  div.innerHTML='<span class="kick-icon">'+icon+'</span><span class="kick-type">'+t+'</span><span class="kick-conf">'+(conf<1?Math.round(conf*100)+'%':'manual')+'</span><span class="kick-src '+src+'">'+src+'</span>';
+  const t   = kick.type;
+  const conf = kick.confidence;
+  const src  = kick.source || 'auto';
+  const icon = t.includes('Ap') ? '🦵' : t.includes('Dolyo') ? '🌀' : '⚡';
+  const cls  = t.includes('Ap') ? 'kick-ap' : t.includes('Dolyo') ? 'kick-dolyo' : 'info';
+  toast(icon + ' P' + pid + ': ' + t + (conf < 1 ? ' (' + Math.round(conf * 100) + '%)' : ''), cls);
+  const lg  = document.getElementById('klog' + pid);
+  const div = document.createElement('div');
+  div.className = 'kick-entry';
+  div.innerHTML = '<span class="kick-icon">' + icon + '</span>'
+    + '<span class="kick-type">' + t + '</span>'
+    + '<span class="kick-conf">' + (conf < 1 ? Math.round(conf * 100) + '%' : 'manual') + '</span>'
+    + '<span class="kick-src ' + src + '">' + src + '</span>';
   lg.prepend(div);
-  if(lg.children.length>60) lg.lastChild.remove();
-  kickCounts[pid][t]=(kickCounts[pid][t]||0)+1;
+  if (lg.children.length > 60) lg.lastChild.remove();
+  kickCounts[pid][t] = (kickCounts[pid][t] || 0) + 1;
 }
 
-// ── Manual kick ──────────────────────────────────────────────
 async function manualKick(pid,type){ await api('POST','/kick/manual',{player_id:pid,kick_type:type}); }
 
-// ── Session ──────────────────────────────────────────────────
 async function startSession(){
   await api('POST','/session/start',{
     session_name:document.getElementById('sessionName').value||'Training',
@@ -314,8 +443,11 @@ function onSessionStarted(s){
   document.getElementById('btnStart').disabled=true;
   document.getElementById('btnStop').disabled=false;
   document.getElementById('elapsedDiv').style.display='flex';
-  document.getElementById('pname1').textContent=s.player_names&&s.player_names[1]||'Player 1';
-  document.getElementById('pname2').textContent=s.player_names&&s.player_names[2]||'Player 2';
+  // Update player names if provided
+  if(s && s.player_names){
+    document.getElementById('pname1').textContent = s.player_names[1] || 'Player 1';
+    document.getElementById('pname2').textContent = s.player_names[2] || 'Player 2';
+  }
   elapsedStart=Date.now();
   clearInterval(elapsedTimer);
   elapsedTimer=setInterval(()=>{ const t=Math.floor((Date.now()-elapsedStart)/1000); document.getElementById('elapsedVal').textContent=Math.floor(t/60)+':'+(t%60+'').padStart(2,'0'); },500);
@@ -327,11 +459,10 @@ function onSessionStopped(s){
   document.getElementById('btnStop').disabled=true;
   document.getElementById('elapsedDiv').style.display='none';
   clearInterval(elapsedTimer);
-  toast('Session saved → '+s.session_dir,'info');
+  toast('Session saved → ' + (s && s.session_dir ? s.session_dir : ''), 'info');
 }
 function restoreSession(s){ if(s&&s.is_recording) onSessionStarted(s); }
 
-// ── Phone links ──────────────────────────────────────────────
 function buildPhoneLinks(ip, port){
   const base='http://'+ip+':'+port;
   [1,2].forEach(pid=>{
@@ -343,12 +474,11 @@ function buildPhoneLinks(ip, port){
   [1,2].forEach(pid=>{
     const url=base+'/phone/'+pid;
     const div=document.createElement('div'); div.className='qr-item';
-    div.innerHTML='<strong style="color:var(--text)">Player '+pid+'</strong><a href="'+url+'" target="_blank">'+url+'</a><br><small>iPhone: Safari only → allow motion&nbsp;&nbsp;|&nbsp;&nbsp;Android: any browser</small>';
+    div.innerHTML='<strong>Player '+pid+'</strong><a href="'+url+'" target="_blank">'+url+'</a><br><small>iPhone: Safari | Android: any</small>';
     row.appendChild(div);
   });
 }
 
-// ── Toast ────────────────────────────────────────────────────
 function toast(msg,cls='info'){
   const area=document.getElementById('toasts');
   const el=document.createElement('div'); el.className='toast '+cls; el.textContent=msg;
@@ -356,26 +486,18 @@ function toast(msg,cls='info'){
   setTimeout(()=>{ el.style.animation='slideOut .3s ease forwards'; setTimeout(()=>el.remove(),300); },4000);
 }
 
-// ── API helper ───────────────────────────────────────────────
 async function api(method,path,body){
   try{
-    const ctrl=new AbortController();
-    const tid=setTimeout(()=>ctrl.abort(),5000);
-    const r=await fetch(API+path,{method,signal:ctrl.signal,headers:{'Content-Type':'application/json'},body:body?JSON.stringify(body):undefined});
-    clearTimeout(tid);
+    const r=await fetch(API+path,{method,headers:{'Content-Type':'application/json'},body:body?JSON.stringify(body):undefined});
     return await r.json();
-  }catch(e){ if(e.name!=='AbortError') toast('API error: '+e.message,'err'); return {}; }
+  }catch(e){ toast('API error: '+e.message,'err'); return {}; }
 }
 
-// ── Init ────────────────────────────────────────────────
 async function init(){
-  // Show URL-based IP immediately — no waiting
-  const ip   = location.hostname;
-  const port = 8000;
+  const ip = location.hostname, port = 8000;
   buildPhoneLinks(ip, port);
   document.getElementById('lanIpDisplay').textContent = ip + ':' + port;
   connectWS();
-  // Then try to get confirmed LAN IP from server (3s timeout)
   try{
     const info = await api('GET','/api/info');
     if(info.lan_ip && info.lan_ip !== '127.0.0.1'){
@@ -387,26 +509,6 @@ async function init(){
   }catch(e){
     // fallback already shown
   }
-}
-
-init();
-
-// ── Phone links ──────────────────────────────────────────────
-function buildPhoneLinks(ip, port){
-  const base='http://'+ip+':'+port;
-  [1,2].forEach(pid=>{
-    const url=base+'/phone/'+pid;
-    document.getElementById('phonelink'+pid).href=url;
-    document.getElementById('phonelink'+pid).textContent=url;
-  });
-  const row=document.getElementById('qrRow'); row.innerHTML='';
-  [1,2].forEach(pid=>{
-    const url=base+'/phone/'+pid;
-    const div=document.createElement('div'); div.className='qr-item';
-    div.innerHTML='<strong>Player '+pid+'</strong><a href="'+url+'" target="_blank">'+url+'</a>'
-      +'<br><small style="color:var(--muted)">iPhone: use Safari → allow motion | Android: any browser</small>';
-    row.appendChild(div);
-  });
 }
 
 init();
