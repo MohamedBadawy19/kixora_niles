@@ -7,14 +7,14 @@ WebSocket endpoints:
 
 REST endpoints:
   POST /session/start  POST /session/stop  GET /session/status
-  POST /ble/scan  POST /ble/connect  POST /ble/disconnect
   POST /kick/manual
   GET  /sessions  GET /api/info
 
-NOTE: BLE is now handled client-side via the Web Bluetooth API in index.html.
-      The browser scans/connects directly to the ESP32 sock and forwards packets
-      to this server over /ws/ble/{player_id}.  Server-side bleak endpoints are
-      kept for backwards-compat but are no longer called by the default UI.
+NOTE: BLE is handled entirely client-side via the Web Bluetooth API.
+      The browser connects directly to the ESP32 sock (no bleak/server-side BLE).
+      Packets are forwarded here over /ws/ble/{player_id} for session recording.
+      The server never opens the Windows BLE adapter — this prevents the
+      connect/disconnect cycling in Windows Bluetooth settings.
 """
 import asyncio
 import json
@@ -30,9 +30,52 @@ from fastapi.responses import HTMLResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
-from ble_manager import BLEManager
+# NOTE: bleak is intentionally NOT imported here.
+# Importing bleak initialises the Windows BLE WinRT stack in the server process,
+# which conflicts with Chrome’s Web Bluetooth connection to the same ESP32 device
+# and causes rapid connect/disconnect cycling in the Windows Bluetooth panel.
+# BLE is now managed entirely by the browser via the Web Bluetooth API.
 from data_recorder import SessionRecorder, KickEvent
 from classifier_core import RealtimeClassifier
+
+
+# ── Lightweight BLE state shadow (no bleak / no BLE adapter) ───────────────
+# Mirrors the BLEManager interface so the rest of the code (/ws/ble relay,
+# session recording, /session/status) works without touching the BLE adapter.
+class _BLEDeviceState:
+    def __init__(self, player_id: int):
+        self.player_id   = player_id
+        self.address     = None
+        self.connected   = False
+        self.last_packet = None
+        self.packet_count = 0
+        self.error       = None
+
+class BLEStateShadow:
+    """Drop-in replacement for BLEManager that never touches the BLE adapter."""
+    def __init__(self):
+        self.devices = {
+            1: _BLEDeviceState(1),
+            2: _BLEDeviceState(2),
+        }
+        self._packet_cbs = []
+        self._status_cbs = []
+
+    def on_packet(self, cb): self._packet_cbs.append(cb)
+    def on_status(self, cb): self._status_cbs.append(cb)
+
+    def status_dict(self) -> dict:
+        return {
+            str(pid): {
+                "player_id":    pid,
+                "address":      dev.address,
+                "connected":    dev.connected,
+                "packet_count": dev.packet_count,
+                "error":        dev.error,
+                "last_packet":  dev.last_packet,
+            }
+            for pid, dev in self.devices.items()
+        }
 
 logging.basicConfig(level=logging.INFO,
                     format="%(asctime)s [%(name)s] %(levelname)s: %(message)s")
@@ -104,9 +147,7 @@ log.info(f"Detected LAN IP: {LAN_IP}")
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     global ble_mgr, model_available
-    ble_mgr = BLEManager()
-    ble_mgr.on_packet(_on_ble_packet)
-    ble_mgr.on_status(_on_ble_status)
+    ble_mgr = BLEStateShadow()   # never touches the BLE adapter — avoids Windows BT conflicts
     model_available = os.path.exists(MODEL_PATH) and os.path.exists(META_PATH)
     if model_available:
         log.info(f"Model found: {MODEL_PATH}")
@@ -417,12 +458,19 @@ async def session_status():
 
 
 # ═══════════════════════════════════════════════════════════════
-# REST: BLE
+# REST: BLE  (stubs — BLE is now handled client-side via Web Bluetooth)
+# These endpoints are kept so old integrations don't 404, but the server
+# never opens the BLE adapter. Connection is done by the browser.
 # ═══════════════════════════════════════════════════════════════
+_BLE_CLIENT_SIDE_MSG = (
+    "BLE is now managed client-side via the Web Bluetooth API. "
+    "Use the 'Connect BLE' button in the dashboard. "
+    "The server no longer accesses the BLE adapter."
+)
+
 @app.post("/ble/scan")
 async def ble_scan():
-    devices = await ble_mgr.scan(duration=6.0)
-    return {"devices": devices}
+    return {"devices": [], "note": _BLE_CLIENT_SIDE_MSG}
 
 
 class BLEConnectRequest(BaseModel):
@@ -432,10 +480,7 @@ class BLEConnectRequest(BaseModel):
 
 @app.post("/ble/connect")
 async def ble_connect(req: BLEConnectRequest):
-    if req.player_id not in (1, 2):
-        raise HTTPException(400, "player_id must be 1 or 2")
-    asyncio.create_task(ble_mgr.connect(req.player_id, req.address))
-    return {"status": "connecting", "player": req.player_id, "address": req.address}
+    return {"status": "client_side", "note": _BLE_CLIENT_SIDE_MSG}
 
 
 class BLEDisconnectRequest(BaseModel):
@@ -444,8 +489,7 @@ class BLEDisconnectRequest(BaseModel):
 
 @app.post("/ble/disconnect")
 async def ble_disconnect(req: BLEDisconnectRequest):
-    await ble_mgr.disconnect(req.player_id)
-    return {"status": "disconnected", "player": req.player_id}
+    return {"status": "client_side", "note": _BLE_CLIENT_SIDE_MSG}
 
 
 # ═══════════════════════════════════════════════════════════════
